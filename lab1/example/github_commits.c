@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "jansson-2.7/build/include/jansson.h"
+#include "../jansson-2.7/build/include/jansson.h"
 #include <curl/curl.h>
 
 #define BUFFER_SIZE  (256 * 1024)  /* 256 KB */

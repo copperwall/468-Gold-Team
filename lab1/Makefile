@@ -8,3 +8,9 @@ dep:
 
 clean-dep:
 	rm -rf jansson-2.7/build
+
+make-cocktails:
+	gcc -o makeCocktails cocktails/cocktails.c -L jansson-2.7/build/lib -ljansson
+
+clean-cocktails:
+	rm -rf makeCocktails

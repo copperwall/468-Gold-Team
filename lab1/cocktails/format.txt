@@ -1,0 +1,21 @@
+[
+{  "id": 1,
+   "name": "martini",
+   "glass": "cocktail",
+   "preparation": "stir over ice, strain into glass",
+   "ingredients": [
+      {"type": "gin", "parts": 2},
+      {"type": "vermouth", "parts": 1}
+   ]
+}, 
+{  
+   "id": 2,
+   "name": "vodka cran",
+   "glass": "tumbler",
+   "preparation": "Pour ingredients over ice into glass",
+   "ingredients": [
+      {"type": "vodka", "parts": 1},
+      {"type": "cranberry juice", "parts": 4}
+   ]
+}
+]

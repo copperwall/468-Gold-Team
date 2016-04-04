@@ -8,3 +8,9 @@ dep:
 
 clean-dep:
 	rm -rf jansson-2.7/build
+
+make-movies:
+	gcc -o makeMovies movies/movies.c -L jansson-2.7/build/lib -ljansson
+
+clean-movies:
+	rm -rf makeMovies

@@ -1,0 +1,24 @@
+[
+   {
+      "id": 1,
+      "title": "The Hateful Eight",
+      "genre": "Family",
+      "director": {
+         "name": "Zack Snyder",
+         "oscarsWon": 4
+      },
+      "year": 1994,
+      "actors": [
+         {
+            "name": "Tommy Wiseau",
+            "oscarsWon": 1,
+            "oscarsNominated": 6
+         },
+         {
+            "name": "Tom Hanks",
+            "oscarsWon": 1,
+            "oscarsNominated": 3
+         }
+      ]
+   }
+]

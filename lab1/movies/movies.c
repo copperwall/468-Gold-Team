@@ -1,5 +1,6 @@
 #include <string.h>
-#include "jansson-2.7/build/include/jansson.h"
+#include <time.h>
+#include "../jansson-2.7/build/include/jansson.h"
 
 struct actor {
    char *name;
@@ -69,6 +70,7 @@ int main(int argc, char *argv[]) {
 
    root_list = json_array();
 
+   srand(time(0));
    for (i = 1; i <= num_movies; i++) {
       movie = generateMovieJSON(i);
       json_array_append_new(root_list, movie);

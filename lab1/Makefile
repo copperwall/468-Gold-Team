@@ -20,3 +20,9 @@ make-movies:
 
 clean-movies:
 	rm -rf makeMovies
+
+make-beers:
+	gcc -o makeBeers beers/beers.c -L jansson-2.7/build/lib -ljansson
+
+clean-beers:
+	rm -rf makeBeers

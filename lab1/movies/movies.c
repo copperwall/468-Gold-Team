@@ -2,12 +2,6 @@
 #include <time.h>
 #include "../jansson-2.7/build/include/jansson.h"
 
-struct actor {
-   char *name;
-   int oscarsNominated;
-   int oscarsWon;
-};
-
 json_t *generateMovieJSON(int id);
 
 json_t *getRandomTitle() {
@@ -22,14 +16,12 @@ json_t *getRandomGenre() {
    return json_string(genres[rand() % 9]);
 }
 
-// Generate a bunch of stucts
 json_t *getRandomDirector() {
    char *names[] = {"Quentin Tarantino", "Guillermo Del Toro", "Christopher Nolan", "Zack Snyder", "Ben Affleck", "Tommy Wiseau"};
    char *name = names[rand() % 6];
    int oscarsWon = rand() % 5;
    json_t *director = json_object();
 
-   // oscarswon can be a random mod 10 thing
    json_object_set_new(director, "name", json_string(name));
    json_object_set_new(director, "oscarsWon", json_integer(oscarsWon));
 
@@ -56,7 +48,6 @@ json_t *getRandomYear() {
    return json_integer(years[rand() % 12]);
 }
 
-// json_t is the data type
 int main(int argc, char *argv[]) {
    if (argc != 2) {
       printf("Usage: movies_generator num_movies\n");
@@ -79,14 +70,6 @@ int main(int argc, char *argv[]) {
    printf("%s\n", json_dumps(root_list, JSON_INDENT(3)));
 }
 
-
-// TODO:
-//
-// Need a way to determine whether or not a key will be used.
-// First object created needs to have all possible keys
-//
-// Following objects do not need to have any of them
-
 json_t *generateMovieJSON(int id) {
    json_t *root, *title, *genre, *year, *director, *actors, *actor;
    int i, num_actors;
@@ -101,7 +84,6 @@ json_t *generateMovieJSON(int id) {
 
    actors = json_array();
 
-   // SLJ, Kurt Russell, Jennifer Jason Leigh
    for (i = 0; i < num_actors; i++) {
       actor = getRandomActor();
       // Add actor to actors, decref if needed

@@ -11,3 +11,38 @@ To build and run:
 
 Love,
 Scott
+
+Here's some example output:
+
+```json
+[
+   {
+      "glass": "cocktail",
+      "id": 1,
+      "ingredients": [
+         {
+            "parts": 1,
+            "type": "rum"
+         }
+      ],
+      "name": "pineapple daiquiri",
+      "perparation": "Blend with ice."
+   },
+   {
+      "glass": "cocktail",
+      "id": 2,
+      "ingredients": [
+         {
+            "parts": 2,
+            "type": "coffee liquer"
+         },
+         {
+            "parts": 1,
+            "type": "gin"
+         }
+      ],
+      "name": "basil margarita",
+      "perparation": "Blend with ice."
+   }
+]
+```

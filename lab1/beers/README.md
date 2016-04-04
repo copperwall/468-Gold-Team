@@ -1,4 +1,4 @@
-# Movie Generator
+# Beer Generator
 
 __To Build__
 

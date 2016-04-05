@@ -1,12 +1,13 @@
 [
    {
-      "prereqs": [
-         568,
-         195
-      ],
       "id": 1,
-      "title": "MATH",
-      "professor": "Stanchev",
-      "num": 593
+      "title": "CSC",
+      "num": 468,
+      "professor": "Dekhtyar",
+      "prereqs": [
+         357,
+         365
+      ]
    }
 ]
+

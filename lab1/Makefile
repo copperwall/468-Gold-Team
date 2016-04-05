@@ -27,3 +27,8 @@ make-beers:
 clean-beers:
 	rm -rf makeBeers
 
+make-courses:
+	gcc -o makeCourses courses/courses.c -L jansson-2.7/build/lib -ljansson
+
+clean-courses:
+	rm -rf makeCourses

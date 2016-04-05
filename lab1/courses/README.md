@@ -15,12 +15,12 @@ __Example Output__
 [
    {
       "id": 1,
-      "title": "KINE",
-      "num": 518,
-      "professor": "Stanchev",
+      "title": "CSC",
+      "num": 468,
+      "professor": "Dekhtyar",
       "prereqs": [
-         226,
-         301
+         357,
+         365
       ]
    }
 ]

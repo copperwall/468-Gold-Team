@@ -1,0 +1,18 @@
+[
+   {
+      "id": 1,
+      "score": 15,
+      "brewery": {
+            "name": "Firestone",
+            "locations": [
+               "San Luis Obispo",
+               "Stockholm",
+               "Copenhagen",
+               "Orlando",
+               "Barcelona",
+               "Munich"
+            ]
+      },
+      "type": "dark lager"
+   }
+]

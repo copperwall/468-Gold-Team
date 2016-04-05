@@ -1,6 +1,6 @@
 # Courses Generator
 
-__TO BUILD__
+__To Build__
 
 Run `make dep` if you haven't already.
 Run `make make-courses`.

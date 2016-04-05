@@ -19,4 +19,4 @@ make-movies:
 	gcc -o makeMovies movies/movies.c -L jansson-2.7/build/lib -ljansson
 
 clean-movies:
-	rm -rf makeMovies
+	rm -rf makeMovies 

@@ -1,0 +1,12 @@
+[
+   {
+      "prereqs": [
+         568,
+         195
+      ],
+      "id": 1,
+      "title": "MATH",
+      "professor": "Stanchev",
+      "num": 593
+   }
+]

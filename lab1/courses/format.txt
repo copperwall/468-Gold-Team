@@ -1,0 +1,13 @@
+[
+   {
+      "id": 1,
+      "title": "CSC",
+      "num": 468,
+      "professor": "Dekhtyar",
+      "prereqs": [
+         357,
+         365
+      ]
+   }
+]
+

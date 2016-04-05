@@ -20,3 +20,27 @@ make-movies:
 
 clean-movies:
 	rm -rf makeMovies
+
+make-beers:
+	gcc -o makeBeers beers/beers.c -L jansson-2.7/build/lib -ljansson
+
+clean-beers:
+	rm -rf makeBeers
+
+make-courses:
+	gcc -o makeCourses courses/courses.c -L jansson-2.7/build/lib -ljansson
+
+clean-courses:
+	rm -rf makeCourses
+
+make-all:
+	gcc -o makeBeers beers/beers.c -L jansson-2.7/build/lib -ljansson
+	gcc -o makeCocktails cocktails/cocktails.c -L jansson-2.7/build/lib -ljansson
+	gcc -o makeCourses courses/courses.c -L jansson-2.7/build/lib -ljansson
+	gcc -o makeMovies movies/movies.c -L jansson-2.7/build/lib -ljansson	
+
+clean-all:
+	rm -rf makeBeers
+	rm -rf makeCocktails
+	rm -rf makeCourses
+	rm -rf makeMovies

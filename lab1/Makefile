@@ -34,7 +34,7 @@ clean-courses:
 	rm -rf makeCourses
 
 make-JSON2CSV:
-	gcc -o makeJSON2CSV JSON2CSV.c JSON2CSV.h -L jansson-2.7/build/lib -ljansson
+	gcc -g -o makeJSON2CSV JSON2CSV.c JSON2CSV.h -L jansson-2.7/build/lib -ljansson
 
 clean-JSON2CSV:
 	rm -rf makeJSON2CSV

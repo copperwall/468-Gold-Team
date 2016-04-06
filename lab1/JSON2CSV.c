@@ -39,36 +39,38 @@ void serialize(){
    Table current;
    int i = 0, j, k;
 
-   while(i++ < numTables) {
+   while(i < numTables) {
       current = tables[i];
       fileName = malloc((strlen(current.tableName) + 5) * sizeof(char));
       strcat(fileName, current.tableName);
       strcat(fileName, ".csv");
-      fp = fopen(current.tableName, "w+");
+      fp = fopen(fileName, "w+");
       
       //print out the colNames in the first row
       j = 0;
-
-      while(j++ < current.numAttributes) {
+      while(j < current.numAttributes) {
          fprintf(fp, "%s, ", current.colNames[j]);   
+         j++;
       }
       fseek(fp, -2, SEEK_CUR);
       fprintf(fp, "\n");
 
       j = 0;
-      while(j++ < current.numRecords) {
+      while(j < current.numRecords) {
          k = 0;
-         while(k++ < current.numAttributes) {
+         while(k < current.numAttributes) {
             fprintf(fp, "%s, ", current.records[j].value[k]);
+            k++;
          }
          fseek(fp, -2, SEEK_CUR);
          fprintf(fp, "\n");
+         j++;
       }
-      
-      free(fileName);
-      fclose(fp);
-   }
 
+      fclose(fp);
+      free(fileName);
+      i++;
+   }
 
 }
 

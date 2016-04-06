@@ -33,14 +33,23 @@ make-courses:
 clean-courses:
 	rm -rf makeCourses
 
+make-JSON2CSV:
+	gcc -o makeJSON2CSV JSON2CSV.c JSON2CSV.h -L jansson-2.7/build/lib -ljansson
+
+clean-JSON2CSV:
+	rm -rf makeJSON2CSV
+
+
 make-all:
 	gcc -o makeBeers beers/beers.c -L jansson-2.7/build/lib -ljansson
 	gcc -o makeCocktails cocktails/cocktails.c -L jansson-2.7/build/lib -ljansson
 	gcc -o makeCourses courses/courses.c -L jansson-2.7/build/lib -ljansson
 	gcc -o makeMovies movies/movies.c -L jansson-2.7/build/lib -ljansson	
+	gcc -o makeJSON2CSV JSON2CSV.c JSON2CSV.h -L jansson-2.7/build/lib -ljansson
 
 clean-all:
 	rm -rf makeBeers
 	rm -rf makeCocktails
 	rm -rf makeCourses
 	rm -rf makeMovies
+	rm -rf makeJSON2CSV

@@ -1,9 +1,9 @@
+#include "jansson-2.7/build/include/jansson.h"
 #define MAX_COLUMNS 20
 #define MAX_RECORDS 100
 #define MAX_ARRAY_DEPTH 5
 #define MAX_TABLES 15
 
-Table tables[MAX_TABLES];
 
 typedef struct Record {
 	char *value[MAX_COLUMNS];
@@ -15,6 +15,7 @@ typedef struct Table {
 	char *colNames[MAX_COLUMNS];
 	Record records[MAX_RECORDS];
 	int numAttributes;
+   int numRecords;
 } Table;
 
 

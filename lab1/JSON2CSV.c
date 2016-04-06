@@ -1,4 +1,10 @@
 #include "JSON2CSV.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+Table tables[MAX_TABLES];
+int numTables;
 
 void record_add(Record *record, char *key, char *value) {
 
@@ -25,4 +31,48 @@ void table_add_record(Table *table, Record *record) {
 
 int table_lookup_index_for_key(Table *table, char *key) {
    return 0; // lol
+}
+
+void serialize(){
+   FILE *fp;
+   char *fileName;
+   Table current;
+   int i = 0, j, k;
+
+   while(i++ < numTables) {
+      current = tables[i];
+      fileName = malloc((strlen(current.tableName) + 5) * sizeof(char));
+      strcat(fileName, current.tableName);
+      strcat(fileName, ".csv");
+      fp = fopen(current.tableName, "w+");
+      
+      //print out the colNames in the first row
+      j = 0;
+
+      while(j++ < current.numAttributes) {
+         fprintf(fp, "%s, ", current.colNames[j]);   
+      }
+      fseek(fp, -2, SEEK_CUR);
+      fprintf(fp, "\n");
+
+      j = 0;
+      while(j++ < current.numRecords) {
+         k = 0;
+         while(k++ < current.numAttributes) {
+            fprintf(fp, "%s, ", current.records[j].value[k]);
+         }
+         fseek(fp, -2, SEEK_CUR);
+         fprintf(fp, "\n");
+      }
+      
+      free(fileName);
+      fclose(fp);
+   }
+
+
+}
+
+
+int main() {
+   return 0;
 }

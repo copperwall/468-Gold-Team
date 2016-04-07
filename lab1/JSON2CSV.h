@@ -3,6 +3,7 @@
 #define MAX_RECORDS 100
 #define MAX_ARRAY_DEPTH 5
 #define MAX_TABLES 15
+#define MAX_TABLE_NAME 100
 
 
 typedef struct Record {
@@ -23,6 +24,8 @@ typedef struct PrimaryKey{
 	int key[MAX_ARRAY_DEPTH];
 	int numKeys;
 } PrimaryKey;
+
+void add_to_key(PrimaryKey *pk, PrimaryKey *newPk, int key);
 
 // Adding and getting values from a Record
 //void record_add(Record *record, char *key, char *value);

@@ -76,7 +76,10 @@ Table *add_table(char *table_name) {
  * Initialzie the values of a table.
  */
 void initialize_table(Table *table, char *name) {
-   table->tableName = name;
+   char *temp = malloc(MAX_TABLE_NAME);
+   strcpy(temp, name);
+
+   table->tableName = temp;
    table->numAttributes = 0;
    table->numRecords = 0;
 }
@@ -85,7 +88,14 @@ void initialize_table(Table *table, char *name) {
  * Add a key to a table.
  */
 void table_add_key(Table *table, char *key) {
-   table->colNames[table->numAttributes++] = key;
+   int ndx = table_lookup_index_for_key(table, key);
+   if (ndx != -1) {
+      return;
+   }
+
+   char *temp = malloc(MAX_TABLE_NAME);
+   strcpy(temp, key);
+   table->colNames[table->numAttributes++] = temp;
 }
 
 /**
@@ -152,8 +162,8 @@ void serialize(){
    while(i < numTables) {
       current = tables[i];
       fileName = malloc((strlen(current.tableName) + 5) * sizeof(char));
-      strcat(fileName, current.tableName);
-      strcat(fileName, ".csv");
+      sprintf(fileName, "%s.csv", current.tableName);
+      printf("Opening filename %s\n", fileName);
       fp = fopen(fileName, "w+");
 
       //print out the colNames in the first row
@@ -215,12 +225,13 @@ void readObjects(json_t *root, PrimaryKey *pk, Table *table) {
    // Add primary keys to table keys
    i = 0;
 
+   printf("CURRENT OBJECT IS NOW %d\n", currentObject);
    if (currentObject == 0) {
       table_add_key(table, "id");
    }
 
    sprintf(key_name, "%d", pk->key[i]);
-   printf("Adding id key %s\n", key_name);
+   printf("Adding id key %s to table %s\n", key_name, table->tableName);
    record_index = table_lookup_index_for_key(table, "id");
    record_add(&record, 0, key_name);
 
@@ -280,6 +291,7 @@ void readObjects(json_t *root, PrimaryKey *pk, Table *table) {
             } else {
                nextTable = get_table(table_name);
             }
+
             json_array_foreach(value, index, array_element) {
                add_to_key(pk, &newPk, index);
                parse(array_element, &newPk, nextTable);
@@ -320,6 +332,8 @@ void readObjects(json_t *root, PrimaryKey *pk, Table *table) {
  * When we hit an array we have to iterate over the contents of the array.
  */
 void readArray(json_t *root, PrimaryKey *pk, Table *table) {
+   size_t index;
+   json_t *array_element;
    PrimaryKey newPk;
    // Iterate over the array passed in.
    json_array_foreach(root, index, array_element) {
@@ -335,7 +349,7 @@ void parse(json_t *root, PrimaryKey* pk, Table *table) {
    // to treat it special (add a level of depth to the PK, iterate again.
    // Any other type of object we don't really care about so we can
    // go straight to our regular object parser.
-   json_type = json_typeof(root);
+   int json_type = json_typeof(root);
    switch (json_type) {
       // If we have an array as the root
       case JSON_ARRAY:
@@ -351,14 +365,21 @@ void parse(json_t *root, PrimaryKey* pk, Table *table) {
 int main(int argc, char *argv[]) {
    // Table: create with filename as tablename
    // PrimaryKey: Initialize with 0 numKeys
-   json_t *root = json_load_file(argv[1], 0, NULL);
+   json_t *value, *root = json_load_file(argv[1], 0, NULL);
    PrimaryKey pk;
+   char *table_name;
+   table_name = strtok(argv[1], ".");
+   printf("TABLE %s\n", table_name);
    Table *table = add_table(argv[1]);
+   size_t index;
 
    pk.numKeys = 0;
 
    currentObject = 0;
-   readObjects(json_array_get(root, 0), &pk, table);
+   json_array_foreach(root, index, value) {
+      currentObject = index;
+      parse(value, &pk, table);
+   }
 
    serialize();
    return 0;

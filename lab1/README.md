@@ -8,4 +8,4 @@ Run `make make-all` to build the generators and the parser.
 __Running__
 
 `./makeMovies <num_movies>` Example use for generator.
-`./makeJSON2CSV <input_file>` 
+`./makeJSON2CSV <input_file>` Exampleuse for parser. 

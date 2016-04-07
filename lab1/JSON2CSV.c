@@ -109,11 +109,11 @@ void table_add_key(Table *table, char *key) {
 void table_add_record(Table *table, Record *record) {
    memcpy(&table->records[table->numRecords++], record, sizeof(Record));
 
-   int i;
-      printf("Transferring record to table\n");
-   for (i = 0; i < record->numAttributes; i++) {
-      printf("%s\n", record->value[i]);
-   }
+   /* int i; */
+   /*    printf("Transferring record to table\n"); */
+   /* for (i = 0; i < record->numAttributes; i++) { */
+   /*    printf("%s\n", record->value[i]); */
+   /* } */
 
    /* Record *thing = &table->records[table->numRecords - 1]; */
 
@@ -246,19 +246,24 @@ void readObjects(json_t *root, PrimaryKey *pk, Table *table) {
       record_add(&record, i, key_name);
    }
 
-   json_object_foreach(root, key, value) {
-      json_type = json_typeof(value);
-      switch (json_type) {
+   if (json_typeof(root) != JSON_OBJECT) {
+      // We have atomic values,  add key for value, add value to report, add
+      // report to table and return.
+      table_add_key(table, "value");
+      record_index = table_lookup_index_for_key(table, "id");
+
+      switch (json_typeof(root)) {
          case JSON_STRING:
-            strcpy(value_str, json_string_value(value));
+            printf("Yo this is a value %s\n", json_string_value(root));
+            strcpy(value_str, json_string_value(root));
             printf("Found string %s\n", value_str);
             break;
          case JSON_INTEGER:
-            sprintf(value_str, "%d", (int)json_integer_value(value));
+            sprintf(value_str, "%d", (int)json_integer_value(root));
             printf("Found int %s\n", value_str);
             break;
          case JSON_REAL:
-            sprintf(value_str, "%0.2f", json_real_value(value));
+            sprintf(value_str, "%0.2f", json_real_value(root));
             printf("Found double %s\n", value_str);
             break;
          case JSON_TRUE:
@@ -273,54 +278,90 @@ void readObjects(json_t *root, PrimaryKey *pk, Table *table) {
             strcpy(value_str, "null");
             printf("Found null %s\n", value_str);
             break;
-         case JSON_OBJECT:
-            // Need to add table and initialize
-            if (currentObject == 0) {
+         default:
+            printf("Uh oh, bad type\n");
+      }
+
+      record_add(&record, record_index, value_str);
+   } else {
+      json_object_foreach(root, key, value) {
+         json_type = json_typeof(value);
+         switch (json_type) {
+            case JSON_STRING:
+               strcpy(value_str, json_string_value(value));
+               printf("Found string %s\n", value_str);
+               break;
+            case JSON_INTEGER:
+               sprintf(value_str, "%d", (int)json_integer_value(value));
+               printf("Found int %s\n", value_str);
+               break;
+            case JSON_REAL:
+               sprintf(value_str, "%0.2f", json_real_value(value));
+               printf("Found double %s\n", value_str);
+               break;
+            case JSON_TRUE:
+               strcpy(value_str, "true");
+               printf("Found true %s\n", value_str);
+               break;
+            case JSON_FALSE:
+               strcpy(value_str, "false");
+               printf("Found false %s\n", value_str);
+               break;
+            case JSON_NULL:
+               strcpy(value_str, "null");
+               printf("Found null %s\n", value_str);
+               break;
+            case JSON_OBJECT:
+               // Need to add table and initialize
+               if (currentObject == 0) {
+                  sprintf(table_name, "%s%s", table->tableName, key);
+                  nextTable = add_table(table_name);
+               } else {
+                  nextTable = get_table(table_name);
+               }
+               parse(value, pk, nextTable);
+               break;
+            case JSON_ARRAY:
                sprintf(table_name, "%s%s", table->tableName, key);
-               nextTable = add_table(table_name);
-            } else {
-               nextTable = get_table(table_name);
-            }
-            parse(value, pk, nextTable);
-            break;
-         case JSON_ARRAY:
-            sprintf(table_name, "%s%s", table->tableName, key);
 
-            if (currentObject == 0) {
-               nextTable = add_table(table_name);
-            } else {
-               nextTable = get_table(table_name);
-            }
+               if (currentObject == 0) {
+                  nextTable = add_table(table_name);
+               } else {
+                  nextTable = get_table(table_name);
+               }
 
-            json_array_foreach(value, index, array_element) {
-               add_to_key(pk, &newPk, index);
-               parse(array_element, &newPk, nextTable);
-            }
-            break;
-      }
-
-      if (json_type != JSON_OBJECT && json_type != JSON_ARRAY && strcmp(key, "id")) {
-         // TODO: Something needs to be done to add each primary key before the
-         // first columns in each table.
-         if (currentObject == 0) {
-            // Add key to table if this is the first object in the collection.
-            table_add_key(table, (char *)key);
+               printf("About to enter JSON ARRAY foreach\n");
+               json_array_foreach(value, index, array_element) {
+                  add_to_key(pk, &newPk, index);
+                  parse(array_element, &newPk, nextTable);
+               }
+               break;
          }
-         // Add attribute key and value to record
-         record_index = table_lookup_index_for_key(table, (char *)key);
-         printf("About to add value %s for key %s\n", value_str, key);
-         record_add(&record, record_index, value_str);
+
+         if (json_type != JSON_OBJECT && json_type != JSON_ARRAY && strcmp(key, "id")) {
+            // TODO: Something needs to be done to add each primary key before the
+            // first columns in each table.
+            if (currentObject == 0) {
+               // Add key to table if this is the first object in the collection.
+               table_add_key(table, (char *)key);
+            }
+            // Add attribute key and value to record
+            record_index = table_lookup_index_for_key(table, (char *)key);
+            printf("About to add value %s for key %s\n", value_str, key);
+            record_add(&record, record_index, value_str);
+         }
       }
    }
 
-   printf("Table debug\n");
-   for (i = 0; i < table->numAttributes; i++) {
-      printf("%s\n", table->colNames[i]);
-   }
-   printf("Record debug\n");
-   for (i = 0; i < record.numAttributes; i++) {
-      printf("%s\n", record.value[i]);
-   }
+
+   /* printf("Table debug\n"); */
+   /* for (i = 0; i < table->numAttributes; i++) { */
+   /*    printf("%s\n", table->colNames[i]); */
+   /* } */
+   /* printf("Record debug\n"); */
+   /* for (i = 0; i < record.numAttributes; i++) { */
+   /*    printf("%s\n", record.value[i]); */
+   /* } */
 
    // Add this point all fields have been iterated over, and the record should
    // be complete. Add record to the table.

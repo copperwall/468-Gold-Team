@@ -41,7 +41,6 @@ void initialize_key(PrimaryKey *pk) {
 void record_add(Record *r, int idx, char *value) {
    char *temp = malloc(MAX_TABLE_NAME);
    strcpy(temp, value);
-   printf("Adding value %s to idx %d\n", value, idx);
 
    r->value[idx] = temp;
    if (idx + 1 > r->numAttributes) {
@@ -163,26 +162,21 @@ void serialize(){
       current = tables[i];
       fileName = malloc((strlen(current.tableName) + 5) * sizeof(char));
       sprintf(fileName, "%s.csv", current.tableName);
-      printf("Opening filename %s\n", fileName);
       fp = fopen(fileName, "w+");
 
       //print out the colNames in the first row
       j = 0;
       while(j < current.numAttributes) {
-         printf("col name %s\n", current.colNames[j]);
          fprintf(fp, "%s, ", current.colNames[j]);
          j++;
       }
       fseek(fp, -2, SEEK_CUR);
       fprintf(fp, "\n");
 
-      printf("numrecords, %d\n", current.numRecords);
       j = 0;
       while(j < current.numRecords) {
          k = 0;
-         printf("attributes %d\n", current.numAttributes);
          while(k < current.numAttributes) {
-            printf("value %s\n", current.records[j].value[k]);
             fprintf(fp, "%s, ", current.records[j].value[k]);
             k++;
          }
@@ -225,13 +219,11 @@ void readObjects(json_t *root, PrimaryKey *pk, Table *table) {
    // Add primary keys to table keys
    i = 0;
 
-   printf("CURRENT OBJECT IS NOW %d\n", currentObject);
    if (currentObject == 0) {
       table_add_key(table, "id");
    }
 
    sprintf(key_name, "%d", pk->key[i]);
-   printf("Adding id key %s to table %s\n", key_name, table->tableName);
    record_index = table_lookup_index_for_key(table, "id");
    record_add(&record, 0, key_name);
 
@@ -242,7 +234,6 @@ void readObjects(json_t *root, PrimaryKey *pk, Table *table) {
       }
 
       sprintf(key_name, "%d", pk->key[i]);
-      printf("Adding position key: %s\n", key_name);
       record_add(&record, i, key_name);
    }
 
@@ -250,36 +241,29 @@ void readObjects(json_t *root, PrimaryKey *pk, Table *table) {
       // We have atomic values,  add key for value, add value to report, add
       // report to table and return.
       table_add_key(table, "value");
-      record_index = table_lookup_index_for_key(table, "id");
+      record_index = table_lookup_index_for_key(table, "value");
 
       switch (json_typeof(root)) {
          case JSON_STRING:
-            printf("Yo this is a value %s\n", json_string_value(root));
             strcpy(value_str, json_string_value(root));
-            printf("Found string %s\n", value_str);
             break;
          case JSON_INTEGER:
             sprintf(value_str, "%d", (int)json_integer_value(root));
-            printf("Found int %s\n", value_str);
             break;
          case JSON_REAL:
             sprintf(value_str, "%0.2f", json_real_value(root));
-            printf("Found double %s\n", value_str);
             break;
          case JSON_TRUE:
             strcpy(value_str, "true");
-            printf("Found true %s\n", value_str);
             break;
          case JSON_FALSE:
             strcpy(value_str, "false");
-            printf("Found false %s\n", value_str);
             break;
          case JSON_NULL:
             strcpy(value_str, "null");
-            printf("Found null %s\n", value_str);
             break;
          default:
-            printf("Uh oh, bad type\n");
+            break;
       }
 
       record_add(&record, record_index, value_str);
@@ -289,27 +273,21 @@ void readObjects(json_t *root, PrimaryKey *pk, Table *table) {
          switch (json_type) {
             case JSON_STRING:
                strcpy(value_str, json_string_value(value));
-               printf("Found string %s\n", value_str);
                break;
             case JSON_INTEGER:
                sprintf(value_str, "%d", (int)json_integer_value(value));
-               printf("Found int %s\n", value_str);
                break;
             case JSON_REAL:
                sprintf(value_str, "%0.2f", json_real_value(value));
-               printf("Found double %s\n", value_str);
                break;
             case JSON_TRUE:
                strcpy(value_str, "true");
-               printf("Found true %s\n", value_str);
                break;
             case JSON_FALSE:
                strcpy(value_str, "false");
-               printf("Found false %s\n", value_str);
                break;
             case JSON_NULL:
                strcpy(value_str, "null");
-               printf("Found null %s\n", value_str);
                break;
             case JSON_OBJECT:
                // Need to add table and initialize
@@ -330,7 +308,6 @@ void readObjects(json_t *root, PrimaryKey *pk, Table *table) {
                   nextTable = get_table(table_name);
                }
 
-               printf("About to enter JSON ARRAY foreach\n");
                json_array_foreach(value, index, array_element) {
                   add_to_key(pk, &newPk, index);
                   parse(array_element, &newPk, nextTable);
@@ -347,7 +324,6 @@ void readObjects(json_t *root, PrimaryKey *pk, Table *table) {
             }
             // Add attribute key and value to record
             record_index = table_lookup_index_for_key(table, (char *)key);
-            printf("About to add value %s for key %s\n", value_str, key);
             record_add(&record, record_index, value_str);
          }
       }
@@ -410,7 +386,6 @@ int main(int argc, char *argv[]) {
    PrimaryKey pk;
    char *table_name;
    table_name = strtok(argv[1], ".");
-   printf("TABLE %s\n", table_name);
    Table *table = add_table(argv[1]);
    size_t index;
 

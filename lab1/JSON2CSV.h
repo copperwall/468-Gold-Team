@@ -3,7 +3,7 @@
 #define MAX_RECORDS 100
 #define MAX_ARRAY_DEPTH 5
 #define MAX_TABLES 15
-#define MAX_TABLE_NAME 100
+#define MAX_TABLE_NAME 1000
 
 
 typedef struct Record {

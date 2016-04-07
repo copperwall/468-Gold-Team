@@ -3,7 +3,7 @@
 #define MAX_RECORDS 100
 #define MAX_ARRAY_DEPTH 5
 #define MAX_TABLES 15
-#define MAX_TABLE_NAME 100
+#define MAX_TABLE_NAME 1000
 
 
 typedef struct Record {
@@ -26,6 +26,7 @@ typedef struct PrimaryKey{
 } PrimaryKey;
 
 void add_to_key(PrimaryKey *pk, PrimaryKey *newPk, int key);
+void initialize_key(PrimaryKey *pk);
 
 // Adding and getting values from a Record
 //void record_add(Record *record, char *key, char *value);
@@ -48,6 +49,8 @@ void initialize_table(Table *table, char *table_name);
 void table_add_key(Table *table, char *key);
 // Add a record to the table
 void table_add_record(Table *table, Record *record);
+// Given a table name, return a Table * to the table with that name.
+Table *get_table(char *name);
 
 // Given a key, return its index in the table->columns
 int table_lookup_index_for_key(Table *table, char *key);

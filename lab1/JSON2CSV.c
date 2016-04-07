@@ -5,7 +5,7 @@
 
 Table tables[MAX_TABLES];
 int numTables;
-int firstObject;
+int currentObject;
 
 /**
  * Add a value to a record.
@@ -92,6 +92,18 @@ void table_add_record(Table *table, Record *record) {
    memcpy(&table->records[table->numRecords++], record, sizeof(Record));
 }
 
+Table *get_table(char *name) {
+   int i;
+
+   for (i = 0; i < numTables; i++) {
+      if (!strcmp(tables[i].tableName, name)) {
+         return &tables[i];
+      }
+   }
+
+   return NULL;
+}
+
 /**
  * Given a table and a string key, find the index
  * that column belongs at in the record.
@@ -122,11 +134,11 @@ void serialize(){
       strcat(fileName, current.tableName);
       strcat(fileName, ".csv");
       fp = fopen(fileName, "w+");
-      
+
       //print out the colNames in the first row
       j = 0;
       while(j < current.numAttributes) {
-         fprintf(fp, "%s, ", current.colNames[j]);   
+         fprintf(fp, "%s, ", current.colNames[j]);
          j++;
       }
       fseek(fp, -2, SEEK_CUR);
@@ -152,12 +164,17 @@ void serialize(){
 }
 
 // TODO:
-// Consider if pk needs to be a pointer. I'm not sure it does.
+// Primary keys need to be added to Record before the other keys.
+//
+// Tables should not be created after the first object.
+//
+// If it isn't the first object do a lookup on the global list of tables for
+// the name that it should have.
 void readObjects(json_t *root, PrimaryKey *pk, Table *table) {
-   int json_type, outer = 0;
+   int json_type, i, outer = 0;
    size_t index, record_index;
    const char *key;
-   char value_str[MAX_TABLE_NAME];
+   char value_str[MAX_TABLE_NAME], key_name[MAX_TABLE_NAME], table_name[MAX_TABLE_NAME];
    json_t *value, *array_element;
    Table *nextTable;
    PrimaryKey newPk;
@@ -170,9 +187,25 @@ void readObjects(json_t *root, PrimaryKey *pk, Table *table) {
       add_to_key(pk, pk, json_integer_value(json_object_get(root, "id")));
    }
 
+   // Add primary keys to table keys
+   i = 0;
+
+   if (currentObject == 0) {
+      table_add_key(table, "id");
+   }
+
+   sprintf(key_name, "%d", pk->key[i]);
+   record_add(&record, i, key_name);
+
+   for (i = 1; i < pk->numKeys; i++) {
+      sprintf(key_name, "position%d", i);
+      if (currentObject == 0) {
+         table_add_key(table, key_name);
+      }
+      record_add(&record, i, key_name);
+   }
+
    json_object_foreach(root, key, value) {
-      // If is atomic
-      // atmoic is string, int, boolean
       json_type = json_typeof(value);
       switch (json_type) {
          case JSON_STRING:
@@ -195,11 +228,22 @@ void readObjects(json_t *root, PrimaryKey *pk, Table *table) {
             break;
          case JSON_OBJECT:
             // Need to add table and initialize
-            nextTable = add_table(strncat(table->tableName, key, MAX_TABLE_NAME));
+            if (currentObject == 0) {
+               sprintf(table_name, "%s%s", table->tableName, key);
+               nextTable = add_table(table_name);
+            } else {
+               nextTable = get_table(table_name);
+            }
             parse(value, pk, nextTable);
             break;
          case JSON_ARRAY:
-            nextTable = add_table(strncat(table->tableName, key, MAX_TABLE_NAME));
+            sprintf(table_name, "%s%s", table->tableName, key);
+
+            if (currentObject == 0) {
+               nextTable = add_table(table_name);
+            } else {
+               nextTable = get_table(table_name);
+            }
             json_array_foreach(value, index, array_element) {
                add_to_key(pk, &newPk, index);
                parse(array_element, &newPk, nextTable);
@@ -210,7 +254,7 @@ void readObjects(json_t *root, PrimaryKey *pk, Table *table) {
       if (json_type != JSON_OBJECT && json_type != JSON_ARRAY) {
          // TODO: Something needs to be done to add each primary key before the
          // first columns in each table.
-         if (firstObject) {
+         if (currentObject) {
             // Add key to table if this is the first object in the collection.
             table_add_key(table, (char *)key);
          }

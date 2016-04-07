@@ -48,6 +48,8 @@ void initialize_table(Table *table, char *table_name);
 void table_add_key(Table *table, char *key);
 // Add a record to the table
 void table_add_record(Table *table, Record *record);
+// Given a table name, return a Table * to the table with that name.
+Table *get_table(char *name);
 
 // Given a key, return its index in the table->columns
 int table_lookup_index_for_key(Table *table, char *key);

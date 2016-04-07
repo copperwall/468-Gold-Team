@@ -373,10 +373,9 @@ int main(int argc, char *argv[]) {
    Table *table = add_table(argv[1]);
    size_t index;
 
-   pk.numKeys = 0;
-
    currentObject = 0;
    json_array_foreach(root, index, value) {
+      pk.numKeys = 0;
       currentObject = index;
       parse(value, &pk, table);
    }

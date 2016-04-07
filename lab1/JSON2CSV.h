@@ -26,6 +26,7 @@ typedef struct PrimaryKey{
 } PrimaryKey;
 
 void add_to_key(PrimaryKey *pk, PrimaryKey *newPk, int key);
+void initialize_key(PrimaryKey *pk);
 
 // Adding and getting values from a Record
 //void record_add(Record *record, char *key, char *value);

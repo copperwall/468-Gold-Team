@@ -34,6 +34,10 @@ void add_to_key(PrimaryKey *pk, PrimaryKey *newPk, int key) {
    newPk->key[newPk->numKeys++] = key;
 }
 
+void initialize_key(PrimaryKey *pk) {
+   pk->numKeys = 0;
+}
+
 void record_add(Record *r, int idx, char *value) {
    char *temp = malloc(MAX_TABLE_NAME);
    strcpy(temp, value);
@@ -311,10 +315,38 @@ void readObjects(json_t *root, PrimaryKey *pk, Table *table) {
    table_add_record(table, &record);
 }
 
-void parse(json_t *root, PrimaryKey* pk, Table *table) {
 
+/**
+ * When we hit an array we have to iterate over the contents of the array.
+ */
+void readArray(json_t *root, PrimaryKey *pk, Table *table) {
+   PrimaryKey newPk;
+   // Iterate over the array passed in.
+   json_array_foreach(root, index, array_element) {
+      // Add a level of depth to the new primary key.
+      add_to_key(pk, &newPk, index);
+      parse(array_element, &newPk, table);
+   }
 }
 
+void parse(json_t *root, PrimaryKey* pk, Table *table) {
+   // Sniff the type of the root object passed in.
+   // Since this is recursive, this could be an array, in which case we need
+   // to treat it special (add a level of depth to the PK, iterate again.
+   // Any other type of object we don't really care about so we can
+   // go straight to our regular object parser.
+   json_type = json_typeof(root);
+   switch (json_type) {
+      // If we have an array as the root
+      case JSON_ARRAY:
+         readArray(root, pk, table);
+         break;
+      // If we have anything else...
+      default:
+         readObjects(root, pk, table);
+         break;
+   }
+}
 
 int main(int argc, char *argv[]) {
    // Table: create with filename as tablename

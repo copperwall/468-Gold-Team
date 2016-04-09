@@ -6,16 +6,17 @@
 //does then the error code is immediately returned
 #define chkerr(err) if ((((int)(err)) < 0)) return err;
 
-typedef struct { /* single disk block */
-   char block[BLOCKSIZE]; /* block content */
-   fileDescriptor FD; /* tinyFS file descriptor */
-   int pageId; /* tinyFS page Id within the file */
-} Block;
+#define ALL_PAGES_PINNED -3
 
 typedef struct {
    fileDescriptor FD; /* tinyFs file descriptor */
    int pageId; /* tinyFS page Id with the file */
 } DiskAddress;
+
+typedef struct { /* single disk block */
+   char block[BLOCKSIZE]; /* block content */
+   DiskAddress diskPage;
+} Block;
 
 typedef struct { /* Main Memory Buffer */
    char *database; /* name of the disk file used with this buffer */
@@ -51,5 +52,17 @@ int unPinPage(Buffer *buf, DiskAddress diskPage);
 //add a new disk page
 int newPage(Buffer *buf, fileDescriptor FD, DiskAddress *diskPage);
 
-//replaces the least recently used page with the specified page
-int replaceLRU(DiskAddress diskPage);
+//Selects the next page to be replaced using the LRU algorithm
+//return value: returns the pageId of the LRU page or an error code
+int getLRUPage(Buffer *buf);
+
+//Loads a page into the buffer, replacing another if necessary
+int loadPage(Buffer *buf, DiskAddress diskPage);
+
+
+//return 1 if the page exists in the buffer.  Otherwise 0.
+int pageExistsInBuffer(Buffer *buf, DiskAddress diskPage);
+
+//Updates the page access timestamp
+int touchBlock(Buffer *buf, DiskAddress diskPage);
+

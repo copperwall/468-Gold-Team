@@ -26,6 +26,12 @@ int squash(Buffer * buf) {
 
 //read access to the disk page
 int readPage(Buffer * buf, DiskAddress diskPage) {
+   if(pageExistsInBuffer(buf, diskPage)) {
+      touchBlock(buf, diskPage);
+   }
+   else {
+      chkerr(loadPage(buf, diskPage));
+   }
    return SUCCESS;
 }
 
@@ -54,9 +60,39 @@ int newPage(Buffer *buf, fileDescriptor FD, DiskAddress * diskPage) {
    return SUCCESS;
 }
 
+//Selects the next unpinned page to be replaced using the LRU algorithm
+//return value: returns the pageId of the LRU page or an error code
+int getLRUPage(Buffer *buf) {
+   return SUCCESS;
+}
 
-//replaces the least recently used page with the specified page
-int replaceLRU(DiskAddress diskPage) {
+//Loads a page into the buffer, replacing another if necessary
+int loadPage(Buffer *buf, DiskAddress diskPage) {
+   int victimPage;
+   if(buf->numOccupied < buf->nBlocks){
+      tfs_readPage(diskPage.FD, diskPage.pageId,
+            buf->pages[buf->numOccupied++].block);
+
+   } else {
+      chkerr(victimPage = getLRUPage(buf));
+      if (buf->dirty[victimPage]) {
+         chkerr(flushPage(buf, buf->pages[victimPage].diskPage));
+      }
+      
+      tfs_readPage(diskPage.FD, diskPage.pageId, 
+         buf->pages[victimPage].block);
+   }
+   touchBlock(buf, diskPage);
+   return SUCCESS;
+}
+
+//return 1 if the page exists in the buffer.  Otherwise 0.
+int pageExistsInBuffer(Buffer *buf, DiskAddress diskPage) {
+   return SUCCESS;
+}
+
+//Updates the page access timestamp
+int touchBlock(Buffer *buf, DiskAddress diskPage) {
    return SUCCESS;
 }
 
@@ -66,6 +102,5 @@ int main() {
    chkerr(commence(DEFAULT_DISK_NAME, &buf, MAX_BUFFER_SIZE));
 
    chkerr(squash(&buf));
-   
    return SUCCESS;
 }

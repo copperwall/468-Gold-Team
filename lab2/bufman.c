@@ -41,3 +41,8 @@ int unPinPage(Buffer *buf, DiskAddress diskPage) {
 int newPage(Buffer *buf, fileDescriptor FD, DiskAddress * diskPage) {
    return 0;
 }
+
+int main() {
+
+   return 0;
+}

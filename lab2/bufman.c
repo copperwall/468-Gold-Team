@@ -25,7 +25,7 @@ int squash(Buffer * buf) {
 }
 
 //read access to the disk page
-int readPage(Buffer * buf, DiskAddress diskPage) {
+int readPage(Buffer *buf, DiskAddress diskPage) {
    if(pageExistsInBuffer(buf, diskPage)) {
       touchBlock(buf, diskPage);
    }
@@ -38,12 +38,7 @@ int readPage(Buffer * buf, DiskAddress diskPage) {
 //write access to the disk page
 int writePage(Buffer *buf, DiskAddress diskPage) {
    int bufferIndex;
-   if(pageExistsInBuffer(buf, diskPage)) {
-      touchBlock(buf, diskPage);
-   }
-   else {
-      chkerr(loadPage(buf, diskPage));
-   }
+   chkerr(readPage(buf, diskPage));
 
    //set the page dirty bit since we are writing to this page
    chkerr(bufferIndex = getBufferIndex(buf, diskPage));
@@ -54,6 +49,13 @@ int writePage(Buffer *buf, DiskAddress diskPage) {
 
 //flush the page from buffer to disk
 int flushPage(Buffer *buf, DiskAddress diskPage) {
+   int bufferIndex;
+   chkerr(bufferIndex = getBufferIndex(buf, diskPage));
+
+   tfs_writePage(diskPage.FD, diskPage.pageId, buf->pages[bufferIndex].block);
+
+   buf->dirty[bufferIndex] = 0;
+   
    return SUCCESS;
 }
 
@@ -78,7 +80,11 @@ int getLRUPage(Buffer *buf) {
    return SUCCESS;
 }
 
-//Loads a page into the buffer, replacing another if necessary
+//Loads a page into the buffer, replacing another if necessary.
+//IMPORTANT: after all pages are filled
+//initially, no page is ever removed from the buffer.  Pages
+//are simply swapped out if necessary.  This means numOccupied
+//should NEVER be decremented.
 int loadPage(Buffer *buf, DiskAddress diskPage) {
    int victimPage;
    if(buf->numOccupied < buf->nBlocks){

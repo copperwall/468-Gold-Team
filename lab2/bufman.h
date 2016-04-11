@@ -66,3 +66,8 @@ int pageExistsInBuffer(Buffer *buf, DiskAddress diskPage);
 //Updates the page access timestamp
 int touchBlock(Buffer *buf, DiskAddress diskPage);
 
+
+//returns the index of the page in the buffer
+//returns an error code if the page does not exist in buffer
+int getBufferIndex(Buffer *buf, DiskAddress diskPage);
+   

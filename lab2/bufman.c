@@ -37,6 +37,18 @@ int readPage(Buffer * buf, DiskAddress diskPage) {
 
 //write access to the disk page
 int writePage(Buffer *buf, DiskAddress diskPage) {
+   int bufferIndex;
+   if(pageExistsInBuffer(buf, diskPage)) {
+      touchBlock(buf, diskPage);
+   }
+   else {
+      chkerr(loadPage(buf, diskPage));
+   }
+
+   //set the page dirty bit since we are writing to this page
+   chkerr(bufferIndex = getBufferIndex(buf, diskPage));
+   buf->dirty[bufferIndex] = 1;
+
    return SUCCESS;
 }
 
@@ -88,6 +100,12 @@ int loadPage(Buffer *buf, DiskAddress diskPage) {
 
 //return 1 if the page exists in the buffer.  Otherwise 0.
 int pageExistsInBuffer(Buffer *buf, DiskAddress diskPage) {
+   return SUCCESS;
+}
+
+//returns the index of the page in the buffer
+//returns an error code if the page does not exist in buffer
+int getBufferIndex(Buffer *buf, DiskAddress diskPage) {
    return SUCCESS;
 }
 

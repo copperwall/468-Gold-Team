@@ -82,6 +82,11 @@ int getLRUPage(Buffer *buf) {
    int i, replaceIndex;
    long minTimestamp = ULONG_MAX;
 
+   // If the buffer is not full, return the next empty slot.
+   if (buf->numOccupied < MAX_BUFFER_SIZE) {
+      return buf->numOccupied;
+   }
+
    for (i = 0; i < buf->numOccupied; i++) {
       if (buf->pin[i] == 0 && buf->timestamp[i] < minTimestamp) {
          minTimestamp = buf->timestamp[i];

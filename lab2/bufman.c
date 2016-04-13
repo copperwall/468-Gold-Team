@@ -121,15 +121,31 @@ int loadPage(Buffer *buf, DiskAddress diskPage) {
    return SUCCESS;
 }
 
-//return 1 if the page exists in the buffer.  Otherwise 0.
+//return SUCCESS (0) if the page exists in the buffer.  Otherwise ERROR (0).
 int pageExistsInBuffer(Buffer *buf, DiskAddress diskPage) {
-   return SUCCESS;
+   int ndx = 0;
+
+   for (ndx; ndx < MAX_BUFFER_SIZE; ndx++) {
+      if (buf->pages[ndx].diskPage.FD == diskPage.FD && buf->pages[ndx].diskPage.pageId == diskPage.pageId) {
+         return SUCCESS;
+      }
+   }
+
+   return ERROR;
 }
 
 //returns the index of the page in the buffer
 //returns an error code if the page does not exist in buffer
 int getBufferIndex(Buffer *buf, DiskAddress diskPage) {
-   return SUCCESS;
+   int ndx = 0; 
+
+   for (ndx; ndx < MAX_BUFFER_SIZE; ndx++) {
+      if (buf->pages[ndx].diskPage.FD == diskPage.FD && buf->pages[ndx].diskPage.pageId == diskPage.pageId) {
+         return ndx;
+      }
+   }
+
+   return ERROR;
 }
 
 //Updates the page access timestamp

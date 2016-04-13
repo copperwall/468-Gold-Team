@@ -81,6 +81,36 @@ int unPinPage(Buffer *buf, DiskAddress diskPage) {
 
 //add a new disk page
 int newPage(Buffer *buf, fileDescriptor FD, DiskAddress * diskPage) {
+   int newBufferIndex;
+   Block *newBlock;
+
+   // Check to see if any pages can be allocated in the buffer.
+   chkerr(newBufferIndex = getLRUPage(buf));
+
+   // If the buffer size is less than the maximum size, increment numOccupied
+   // to for the new block about to be filled.
+   if (buf->numOccupied < MAX_BUFFER_SIZE) {
+      ++buf->numOccupied;
+   }
+
+   // If the lru block is dirty, flush it, otherwise just clobber it.
+   if (buf->dirty[newBufferIndex]) {
+      flushPage(buf, buf->pages[newBufferIndex].diskPage);
+   }
+
+   // Grab the next page in tinyFS
+   diskPage->FD = FD;
+   diskPage->pageId = tfs_numPages(FD);
+
+   newBlock = &(buf->pages[newBufferIndex]);
+
+   // Initialize new empty block
+   memset(newBlock->block, 0, BLOCKSIZE);
+   // Copy DiskAddress to new block
+   memcpy(&(newBlock->diskPage), diskPage, sizeof(DiskAddress));
+   // Flush new empty block to new disk page.
+   flushPage(buf, *diskPage);
+
    return SUCCESS;
 }
 
@@ -89,6 +119,11 @@ int newPage(Buffer *buf, fileDescriptor FD, DiskAddress * diskPage) {
 int getLRUPage(Buffer *buf) {
    int i, replaceIndex;
    long minTimestamp = ULONG_MAX;
+
+   // If the buffer is not full, return the next empty slot.
+   if (buf->numOccupied < MAX_BUFFER_SIZE) {
+      return buf->numOccupied;
+   }
 
    for (i = 0; i < buf->numOccupied; i++) {
       if (buf->pin[i] == 0 && buf->timestamp[i] < minTimestamp) {

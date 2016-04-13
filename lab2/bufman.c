@@ -21,8 +21,12 @@ int commence(char *database, Buffer *buf, int nBlocks) {
 }
 
 //graciously end the work of the buffer
+// Scott
 int squash(Buffer * buf) {
+   // Free the dynamic memory containing the database name
    free(buf->database);
+   // Free the Buffer object itself.
+   free(buf);
    return SUCCESS;
 }
 
@@ -62,12 +66,16 @@ int flushPage(Buffer *buf, DiskAddress diskPage) {
 }
 
 //pin the page
+// Scott
 int pinPage(Buffer *buf, DiskAddress diskPage) {
+   buf->pin[diskPage.pageId] = 1;
    return SUCCESS;
 }
 
 //unpin the page
+// Scott
 int unPinPage(Buffer *buf, DiskAddress diskPage) {
+   buf->pin[diskPage.pageId] = 0;
    return SUCCESS;
 }
 

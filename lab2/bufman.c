@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
+#include <limits.h>
 
 //initialize the buffer
 int commence(char *database, Buffer *buf, int nBlocks) {
@@ -77,7 +79,22 @@ int newPage(Buffer *buf, fileDescriptor FD, DiskAddress * diskPage) {
 //Selects the next unpinned page to be replaced using the LRU algorithm
 //return value: returns the pageId of the LRU page or an error code
 int getLRUPage(Buffer *buf) {
-   return SUCCESS;
+   int i, replaceIndex;
+   long minTimestamp = ULONG_MAX;
+
+   for (i = 0; i < buf->numOccupied; i++) {
+      if (buf->pin[i] == 0 && buf->timestamp[i] < minTimestamp) {
+         minTimestamp = buf->timestamp[i];
+         replaceIndex = i;
+      }
+   }
+
+   // In this case all blocks are pinned
+   if (minTimestamp == ULONG_MAX) {
+      return ERROR;
+   }
+
+   return replaceIndex;
 }
 
 //Loads a page into the buffer, replacing another if necessary.
@@ -117,6 +134,11 @@ int getBufferIndex(Buffer *buf, DiskAddress diskPage) {
 
 //Updates the page access timestamp
 int touchBlock(Buffer *buf, DiskAddress diskPage) {
+   int bufferIndex;
+
+   chkerr(bufferIndex = getBufferIndex(buf, diskPage));
+   buf->timestamp[bufferIndex] = time(NULL);
+
    return SUCCESS;
 }
 

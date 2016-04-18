@@ -28,12 +28,17 @@ int main() {
    char *command;
    size_t size = MAX_LINE_SIZE;
    DiskAddress *address, newAddress;
-   Buffer buf;
+   Buffer *buf = calloc(1, sizeof(Buffer));
+   int fd = 0;
 
    while (getline(&line, &size, stdin)) {
       // strsep the line based on
       command = strsep(&line, " ");
       printf("You entered command %s\n", command);
+
+      if (command[strlen(command) - 1] == '\n') {
+         command[strlen(command) - 1] = '\0';
+      }
 
       if (!strcmp(command, "start")) {
          // Expect a filename and a number of blocks
@@ -42,40 +47,52 @@ int main() {
          int nBlocks;
 
          nBlocks = atoi(numBlocks);
-         commence(filename, &buf, nBlocks);
+         printf("Opening file %s with blocks %d\n", filename, nBlocks);
+         commence(filename, buf, nBlocks);
+         fd = tfs_openFile("test");
       } else if (!strcmp(command, "end")) {
          // No args
-         squash(&buf);
+         squash(buf);
+         return 0;
       } else if (!strcmp(command, "read")) {
          // Takes fd,pageid
          address = handle_args(line);
-         readPage(&buf, *address);
+         printf("Reading page with fd %d and pageid %d\n", address->FD, address->pageId);
+         readPage(buf, *address);
       } else if (!strcmp(command, "write")) {
          // Takes fd,pageid
          address = handle_args(line);
-         writePage(&buf, *address);
+         writePage(buf, *address);
       } else if (!strcmp(command, "flush")) {
          // Takes fd,pageid
          address = handle_args(line);
-         flushPage(&buf, *address);
+         flushPage(buf, *address);
       } else if (!strcmp(command, "pin")) {
          // Takes fd,pageid
          address = handle_args(line);
-         pinPage(&buf, *address);
+         pinPage(buf, *address);
       } else if (!strcmp(command, "unpin")) {
          // Takes fd,pageid
          address = handle_args(line);
-         unPinPage(&buf, *address);
+         unPinPage(buf, *address);
       } else if (!strcmp(command, "new")) {
          // Takes num pages
          char *numPages = strsep(&line, " ");
          int nPages = atoi(numPages);
-         newPage(&buf, /* FD */ 1, &newAddress);
+
+         int i;
+         for (i = 0; i < nPages; i++) {
+            newPage(buf, fd, &newAddress);
+         }
+         for (i = 0; i < buf->numOccupied; i++) {
+            printf("FD: %d pageid: %d\n", buf->pages[i].diskPage.FD, buf->pages[i].diskPage.pageId);
+         }
       } else if (!strcmp(command, "check")) {
          // Call checkpoint of Test API
       } else {
          printf("Unknown command: %s\n", command);
-         exit(-1);
+         printf("%d\n", strcmp(command, "end"));
+         /* exit(-1); */
       }
    }
 }

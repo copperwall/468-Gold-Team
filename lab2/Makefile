@@ -7,5 +7,7 @@ tests: tests.c
 	$(CC) $(CFLAGS) -o tests tests.c libDisk.o libTinyFS.o
 bufman: bufman.c bufman.h libTinyFS.h tinyFS.h libDisk.o libTinyFS.o
 	$(CC) $(CFLAGS) -o bufman bufman.c bufman.h tinyFS.h libTinyFS.h libDisk.o libTinyFS.o
+harness: bufman.c bufman.h libTinyFS.h tinyFS.h libDisk.o libTinyFS.o bufferTest.c
+	$(CC) $(CFLAGS) -o harness bufman.c bufman.h tinyFS.h libTinyFS.h libDisk.o libTinyFS.o bufferTest.c
 clean:
 	rm bufman tests

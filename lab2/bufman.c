@@ -16,6 +16,7 @@ int commence(char *database, Buffer *buf, int nBlocks) {
    chkerr(tfs_mount(database));
    buf->database = strdup(database);
    buf->nBlocks = nBlocks;
+   buf->numOccupied = 0;
    
    return SUCCESS;
 }
@@ -100,7 +101,7 @@ int newPage(Buffer *buf, fileDescriptor FD, DiskAddress * diskPage) {
 
    // Grab the next page in tinyFS
    diskPage->FD = FD;
-   diskPage->pageId = tfs_numPages(FD);
+   diskPage->pageId = tfs_numPages(FD) + 1;
 
    newBlock = &(buf->pages[newBufferIndex]);
 
@@ -201,11 +202,11 @@ int touchBlock(Buffer *buf, DiskAddress diskPage) {
    return SUCCESS;
 }
 
-int main() {
-   Buffer buf = {}; //inializes all fields to 0
+/* int main() { */
+/*    Buffer buf = {}; //inializes all fields to 0 */
 
-   chkerr(commence(DEFAULT_DISK_NAME, &buf, MAX_BUFFER_SIZE));
+/*    chkerr(commence(DEFAULT_DISK_NAME, &buf, MAX_BUFFER_SIZE)); */
 
-   chkerr(squash(&buf));
-   return SUCCESS;
-}
+/*    chkerr(squash(&buf)); */
+/*    return SUCCESS; */
+/* } */

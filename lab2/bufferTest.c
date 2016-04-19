@@ -89,6 +89,7 @@ int main() {
          }
       } else if (!strcmp(command, "check")) {
          // Call checkpoint of Test API
+         checkpoint(buf);
       } else {
          printf("Unknown command: %s\n", command);
          printf("%d\n", strcmp(command, "end"));

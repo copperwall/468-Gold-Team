@@ -202,6 +202,68 @@ int touchBlock(Buffer *buf, DiskAddress diskPage) {
    return SUCCESS;
 }
 
+// print general information about current buffer
+void checkpoint(Buffer *buf) {
+   int i = 0;
+   printf("Disk: %c\n", buf->database);
+   printf("Slots occupied: %d\n", buf->numOccupied);
+   for (i = 0; i < buf->nBlocks; i++) {
+      printf("BlockID: %d\n", (buf->pages[i]).diskPage);
+      printf("Timestamp: %ld\n", buf->timestamp[i]);
+      printf("Pin: %c\n", buf->pin[i]);
+      printf("Dirty page: %c\n", buf->dirty[i]);
+   }
+}
+
+// print contents of page at the index of buffer
+int pageDump(Buffer *buf, int index) {
+   int i;
+   if (buf->pages[index].diskPage.pageId) {
+      Block page = buf->pages[index];
+      for (i = 0; i < BLOCKSIZE; i++) {
+         printf("%c ", page.block[i]);
+      }
+      printf("\n");
+      return SUCCESS;
+   }
+   else
+      return ERROR;
+}
+
+// prints from buffer with given diskaddress
+int printPage(Buffer *buf, DiskAddress diskPage) {
+   int i, ndx;
+   if (readPage(buf, diskPage)) {
+      if (pageExistsInBuffer(buf, diskPage)) {
+         ndx = getBufferIndex(buf, diskPage);
+         return pageDump(buf, ndx);
+      }
+      else {
+         printf("Page not in the buffer.\n");
+         return ERROR;
+      }
+   }
+   else {
+      printf("Block Id does not exist on disk.\n");
+      return ERROR;
+   }
+}
+
+// prints from disk with given diskaddress
+int printBlock(Buffer *buf, DiskAddress diskPage) {
+   int i;
+   char block[BLOCKSIZE];
+   if (tfs_readPage(diskPage.FD, diskPage.pageId, block)) {
+      for (i = 0; i < BLOCKSIZE; i++) {
+         printf("%c ", block[i]);
+      }
+      printf("\n");
+      return SUCCESS;
+   }
+   else
+      return ERROR;
+}
+
 /* int main() { */
 /*    Buffer buf = {}; //inializes all fields to 0 */
 

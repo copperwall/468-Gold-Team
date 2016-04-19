@@ -207,7 +207,7 @@ void checkpoint(Buffer *buf) {
    int i = 0;
    printf("Disk: %c\n", buf->database);
    printf("Slots occupied: %d\n", buf->numOccupied);
-   for (i = 0; i < buf->nBlocks; i++) {
+   for (i = 0; i < buf->numOccupied; i++) {
       printf("BlockID: %d\n", (buf->pages[i]).diskPage);
       printf("Timestamp: %ld\n", buf->timestamp[i]);
       printf("Pin: %c\n", buf->pin[i]);

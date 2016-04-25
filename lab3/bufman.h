@@ -71,3 +71,4 @@ int touchBlock(Buffer *buf, DiskAddress diskPage);
 //returns an error code if the page does not exist in buffer
 int getBufferIndex(Buffer *buf, DiskAddress diskPage);
    
+void checkpoint(Buffer *buf);

@@ -205,13 +205,14 @@ int touchBlock(Buffer *buf, DiskAddress diskPage) {
 // print general information about current buffer
 void checkpoint(Buffer *buf) {
    int i = 0;
-   printf("Disk: %c\n", buf->database);
+   printf("Disk: %s\n", buf->database);
    printf("Slots occupied: %d\n", buf->numOccupied);
    for (i = 0; i < buf->numOccupied; i++) {
-      printf("BlockID: %d\n", (buf->pages[i]).diskPage);
-      printf("Timestamp: %ld\n", buf->timestamp[i]);
-      printf("Pin: %c\n", buf->pin[i]);
-      printf("Dirty page: %c\n", buf->dirty[i]);
+      printf("Buffer Slot %d\n", i);
+      printf("\tBlockID: %d\n", (buf->pages[i]).diskPage);
+      printf("\tTimestamp: %ld\n", buf->timestamp[i]);
+      printf("\tPin: %d\n", buf->pin[i]);
+      printf("\tDirty page: %d\n\n", buf->dirty[i]);
    }
 }
 

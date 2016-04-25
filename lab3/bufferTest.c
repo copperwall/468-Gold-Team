@@ -18,23 +18,31 @@ DiskAddress *handle_args(char *args) {
    return address;
 }
 
-// Needs to read input and call commands for the following inputs
+// Needs to read from file and call commands for the following inputs
 // While reading from file is not null
 // Strtok on whitespace to split the string
 // Take the first of the strtok to be the command
 // Based on the command handle the options
-int main() {
+int main(int argc, char *argv[]) {
    char *line = NULL;
    char *command;
    size_t size = MAX_LINE_SIZE;
    DiskAddress *address, newAddress;
    Buffer *buf = calloc(1, sizeof(Buffer));
-   int fd = 0;
+   FILE *input;
+   int tfs_fd = 0;
 
-   while (getline(&line, &size, stdin)) {
+   if (argc != 2) {
+      printf("Usage: ./harness <filename>\n");
+      return -1;
+   }
+
+   input = fopen(argv[1], "r");
+
+   while (getline(&line, &size, input)) {
       // strsep the line based on
+      printf("%s\n", line);
       command = strsep(&line, " ");
-      printf("You entered command %s\n", command);
 
       if (command[strlen(command) - 1] == '\n') {
          command[strlen(command) - 1] = '\0';
@@ -42,14 +50,12 @@ int main() {
 
       if (!strcmp(command, "start")) {
          // Expect a filename and a number of blocks
-         char *filename = strsep(&line, " ");
+         char *diskName = strsep(&line, " ");
          char *numBlocks = strsep(&line, " ");
          int nBlocks;
 
          nBlocks = atoi(numBlocks);
-         printf("Opening file %s with blocks %d\n", filename, nBlocks);
-         commence(filename, buf, nBlocks);
-         fd = tfs_openFile("test");
+         commence(diskName, buf, nBlocks);
       } else if (!strcmp(command, "end")) {
          // No args
          squash(buf);
@@ -82,7 +88,7 @@ int main() {
 
          int i;
          for (i = 0; i < nPages; i++) {
-            newPage(buf, fd, &newAddress);
+            newPage(buf, tfs_fd, &newAddress);
          }
          for (i = 0; i < buf->numOccupied; i++) {
             printf("FD: %d pageid: %d\n", buf->pages[i].diskPage.FD, buf->pages[i].diskPage.pageId);

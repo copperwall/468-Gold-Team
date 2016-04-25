@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
 
 
          nBlocks = atoi(numBlocks);
-         commence(diskName, buf, nBlocks);
+         commence(diskName, buf, nBlocks, nBlocks);
       } else if (!strcmp(command, "end")) {
          squash(buf);
          return 0;

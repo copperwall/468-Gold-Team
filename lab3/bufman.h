@@ -20,16 +20,19 @@ typedef struct { /* single disk block */
 
 typedef struct { /* Main Memory Buffer */
    char *database; /* name of the disk file used with this buffer */
-   int nBlocks; /* number of buffer slots */
-   Block pages[MAX_BUFFER_SIZE]; /* the buffer itself. stores content */
+   int nBufferBlocks; /* number of persistent buffer slots */
+   int nCacheBlocks; /* number of volative buffer slots */
+   Block pages[MAX_BUFFER_SIZE]; /* the persistent buffer itself. stores content */
+   Block cache[MAX_BUFFER_SIZE]; /* the volatile buffer */
    long timestamp[MAX_BUFFER_SIZE]; /* timestamp for LRU, FIFO and other eviction strategies */
    char pin[MAX_BUFFER_SIZE]; /* Pinned Page flags */
    char dirty[MAX_BUFFER_SIZE]; /* Dirty Page flags */
-   int numOccupied; /* Number of occupied buffer slots */
+   int numBufferOccupied; /* Number of occupied persistent buffer slots */
+   int numCacheOccupied; /* Number of occupied volatile buffer slots */
 } Buffer;
 
 //initialize the buffer
-int commence(char *Database, Buffer *buf, int nBlocks);
+int commence(char *Database, Buffer *buf, int nBufferBlocks, int nCacheBlocks);
 
 //graciously end the work of the buffer
 int squash(Buffer *buf);

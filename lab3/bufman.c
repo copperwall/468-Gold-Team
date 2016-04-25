@@ -7,16 +7,18 @@
 #include <limits.h>
 
 //initialize the buffer
-int commence(char *database, Buffer *buf, int nBlocks) {
+int commence(char *database, Buffer *buf, int nBufferBlocks, int nCacheBlocks) {
    //check if file exists and creates it if necessary
-   if(access(database, F_OK ) == -1 ) {
-      chkerr(tfs_mkfs(database, nBlocks * BLOCKSIZE));
+   if(access(database, F_OK ) == -1) {
+      chkerr(tfs_mkfs(database, nBufferBlocks * BLOCKSIZE));
    }
 
    chkerr(tfs_mount(database));
    buf->database = strdup(database);
-   buf->nBlocks = nBlocks;
-   buf->numOccupied = 0;
+   buf->nBufferBlocks = nBufferBlocks;
+   buf->nCacheBlocks = nCacheBlocks;
+   buf->numBufferOccupied = 0;
+   buf->numCacheOccupied = 0;
    
    return SUCCESS;
 }
@@ -88,10 +90,10 @@ int newPage(Buffer *buf, fileDescriptor FD, DiskAddress * diskPage) {
    // Check to see if any pages can be allocated in the buffer.
    chkerr(newBufferIndex = getLRUPage(buf));
 
-   // If the buffer size is less than the maximum size, increment numOccupied
+   // If the buffer size is less than the maximum size, increment numBufferOccupied
    // to for the new block about to be filled.
-   if (buf->numOccupied < MAX_BUFFER_SIZE) {
-      ++buf->numOccupied;
+   if (buf->numBufferOccupied < MAX_BUFFER_SIZE) {
+      ++buf->numBufferOccupied;
    }
 
    // If the lru block is dirty, flush it, otherwise just clobber it.
@@ -122,11 +124,11 @@ int getLRUPage(Buffer *buf) {
    long minTimestamp = ULONG_MAX;
 
    // If the buffer is not full, return the next empty slot.
-   if (buf->numOccupied < MAX_BUFFER_SIZE) {
-      return buf->numOccupied;
+   if (buf->numBufferOccupied < MAX_BUFFER_SIZE) {
+      return buf->numBufferOccupied;
    }
 
-   for (i = 0; i < buf->numOccupied; i++) {
+   for (i = 0; i < buf->numBufferOccupied; i++) {
       if (buf->pin[i] == 0 && buf->timestamp[i] < minTimestamp) {
          minTimestamp = buf->timestamp[i];
          replaceIndex = i;
@@ -144,13 +146,13 @@ int getLRUPage(Buffer *buf) {
 //Loads a page into the buffer, replacing another if necessary.
 //IMPORTANT: after all pages are filled
 //initially, no page is ever removed from the buffer.  Pages
-//are simply swapped out if necessary.  This means numOccupied
+//are simply swapped out if necessary.  This means numBufferOccupied
 //should NEVER be decremented.
 int loadPage(Buffer *buf, DiskAddress diskPage) {
    int victimPage;
-   if(buf->numOccupied < buf->nBlocks){
+   if(buf->numBufferOccupied < buf->nBufferBlocks){
       tfs_readPage(diskPage.FD, diskPage.pageId,
-            buf->pages[buf->numOccupied++].block);
+            buf->pages[buf->numBufferOccupied++].block);
 
    } else {
       chkerr(victimPage = getLRUPage(buf));
@@ -206,8 +208,8 @@ int touchBlock(Buffer *buf, DiskAddress diskPage) {
 void checkpoint(Buffer *buf) {
    int i = 0;
    printf("Disk: %s\n", buf->database);
-   printf("Slots occupied: %d\n", buf->numOccupied);
-   for (i = 0; i < buf->numOccupied; i++) {
+   printf("Slots occupied: %d\n", buf->numBufferOccupied);
+   for (i = 0; i < buf->numBufferOccupied; i++) {
       printf("Buffer Slot %d\n", i);
       printf("\tBlockID: %d\n", (buf->pages[i]).diskPage);
       printf("\tTimestamp: %ld\n", buf->timestamp[i]);

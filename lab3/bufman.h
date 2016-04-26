@@ -15,7 +15,8 @@ typedef struct {
 
 typedef struct { /* single disk block */
    char block[BLOCKSIZE]; /* block content */
-   char isVolitile;
+   char isVolatile;
+   char isAvailable;
    DiskAddress diskPage;
 } Block;
 
@@ -67,6 +68,9 @@ int loadPage(Buffer *buf, DiskAddress diskPage);
 //return 1 if the page exists in the buffer.  Otherwise 0.
 int pageExistsInBuffer(Buffer *buf, DiskAddress diskPage);
 
+//return 1 if the page exists in the cache.  Otherwise 0.
+int pageExistsInCache(Buffer *buf, DiskAddress diskPage);
+
 //Updates the page access timestamp
 int touchBlock(Buffer *buf, DiskAddress diskPage);
 
@@ -74,5 +78,10 @@ int touchBlock(Buffer *buf, DiskAddress diskPage);
 //returns the index of the page in the buffer
 //returns an error code if the page does not exist in buffer
 int getBufferIndex(Buffer *buf, DiskAddress diskPage);
+int getCacheIndex(Buffer *buf, DiskAddress diskPage);
    
 void checkpoint(Buffer *buf);
+
+int getAvailableCachePage(Buffer *buf);
+int getAvailableBufferPage(Buffer *buf);
+int allocateCachePage(Buffer *buf, DiskAddress diskPage);

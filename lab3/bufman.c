@@ -19,7 +19,16 @@ int commence(char *database, Buffer *buf, int nBufferBlocks, int nCacheBlocks) {
    buf->nCacheBlocks = nCacheBlocks;
    buf->numBufferOccupied = 0;
    buf->numCacheOccupied = 0;
-   
+
+   // Initialize all buffer and cache slots to be available.
+   int i;
+   for (i = 0; i < MAX_BUFFER_SIZE; i++) {
+      buf->cache[i].isAvailable = 1;
+      buf->cache[i].isVolatile = 1;
+      buf->pages[i].isAvailable = 1;
+      buf->pages[i].isVolatile = 0;
+   }
+
    return SUCCESS;
 }
 
@@ -180,6 +189,19 @@ int pageExistsInBuffer(Buffer *buf, DiskAddress diskPage) {
    return ERROR;
 }
 
+//return SUCCESS (0) if the page exists in the buffer.  Otherwise ERROR (0).
+int pageExistsInCache(Buffer *buf, DiskAddress diskPage) {
+   int ndx = 0;
+
+   for (ndx; ndx < MAX_BUFFER_SIZE; ndx++) {
+      if (buf->cache[ndx].diskPage.FD == diskPage.FD && buf->cache[ndx].diskPage.pageId == diskPage.pageId) {
+         return SUCCESS;
+      }
+   }
+
+   return ERROR;
+}
+
 //returns the index of the page in the buffer
 //returns an error code if the page does not exist in buffer
 int getBufferIndex(Buffer *buf, DiskAddress diskPage) {
@@ -187,6 +209,20 @@ int getBufferIndex(Buffer *buf, DiskAddress diskPage) {
 
    for (ndx; ndx < MAX_BUFFER_SIZE; ndx++) {
       if (buf->pages[ndx].diskPage.FD == diskPage.FD && buf->pages[ndx].diskPage.pageId == diskPage.pageId) {
+         return ndx;
+      }
+   }
+
+   return ERROR;
+}
+
+//returns the index of the page in the buffer
+//returns an error code if the page does not exist in buffer
+int getCacheIndex(Buffer *buf, DiskAddress diskPage) {
+   int ndx = 0;
+
+   for (ndx; ndx < MAX_BUFFER_SIZE; ndx++) {
+      if (buf->cache[ndx].diskPage.FD == diskPage.FD && buf->cache[ndx].diskPage.pageId == diskPage.pageId) {
          return ndx;
       }
    }
@@ -267,11 +303,79 @@ int printBlock(Buffer *buf, DiskAddress diskPage) {
       return ERROR;
 }
 
-/* int main() { */
-/*    Buffer buf = {}; //inializes all fields to 0 */
+int getAvailableCachePage(Buffer *buf) {
+   int i;
 
-/*    chkerr(commence(DEFAULT_DISK_NAME, &buf, MAX_BUFFER_SIZE)); */
+   for (i = 0; i < buf->numCacheOccupied; i++) {
+      if (buf->cache[i].isAvailable) {
+         return i;
+      }
+   }
 
-/*    chkerr(squash(&buf)); */
-/*    return SUCCESS; */
-/* } */
+   return -1;
+}
+
+int getAvailableBufferPage(Buffer *buf) {
+   int i;
+
+   for (i = 0; i < buf->numBufferOccupied; i++) {
+      if (buf->pages[i].isAvailable) {
+         return i;
+      }
+   }
+
+   return -1;
+}
+
+int allocateCachePage(Buffer *buf, DiskAddress diskPage) {
+   // Lookup available page.
+   int availCachePage = getAvailableCachePage(buf);
+   int availBufferPage;
+   int eviction;
+
+   if (availCachePage < 0) {
+      // pick cache page for eviction
+      // random eviction strategy
+      eviction = rand() % MAX_BUFFER_SIZE;
+
+      // cpy block to persistent storage
+      availBufferPage = getLRUPage(buf);
+
+      // If the page is dirty, flush
+      if (buf->dirty[availBufferPage]) {
+         flushPage(buf, buf->pages[availBufferPage].diskPage);
+      }
+
+      memcpy(&buf->cache[availCachePage], &buf->pages[availBufferPage], sizeof(Block));
+
+      buf->cache[eviction].isAvailable = 0;
+      memcpy(&(buf->cache[eviction].diskPage), &diskPage, sizeof(DiskAddress));
+   } else {
+      buf->cache[availCachePage].diskPage = diskPage;
+      buf->cache[availCachePage].isVolatile = 1;
+      buf->cache[availCachePage].isAvailable = 0;
+   }
+
+   return SUCCESS;
+}
+
+/**
+ * Remove a cache page.
+ * Mark it as available, zero out its things.
+ */
+int removeCachePage(Buffer *buf, DiskAddress diskPage) {
+   int index;
+   if ((index = getCacheIndex(buf, diskPage)) == ERROR ) {
+      // We tried to empty out something we shouldn't have.
+      return ERROR;
+   }
+
+   buf->cache[index].isAvailable = 1;
+   // zero out the block and diskpage, too.
+   memset(&(buf->cache[index].diskPage), 0, sizeof(DiskAddress));
+   memset(&(buf->cache[index].block), 0, BLOCKZISE);
+
+   buf->numCacheOccupied--;
+
+   return SUCCESS;
+}

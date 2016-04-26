@@ -373,7 +373,7 @@ int removeCachePage(Buffer *buf, DiskAddress diskPage) {
    buf->cache[index].isAvailable = 1;
    // zero out the block and diskpage, too.
    memset(&(buf->cache[index].diskPage), 0, sizeof(DiskAddress));
-   memset(&(buf->cache[index].block), 0, BLOCKZISE);
+   memset(&(buf->cache[index].block), 0, BLOCKSIZE);
 
    buf->numCacheOccupied--;
 

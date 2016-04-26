@@ -15,6 +15,7 @@ typedef struct {
 
 typedef struct { /* single disk block */
    char block[BLOCKSIZE]; /* block content */
+   char isVolitile;
    DiskAddress diskPage;
 } Block;
 

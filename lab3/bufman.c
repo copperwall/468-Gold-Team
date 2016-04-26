@@ -189,6 +189,19 @@ int pageExistsInBuffer(Buffer *buf, DiskAddress diskPage) {
    return ERROR;
 }
 
+//return SUCCESS (0) if the page exists in the buffer.  Otherwise ERROR (0).
+int pageExistsInCache(Buffer *buf, DiskAddress diskPage) {
+   int ndx = 0;
+
+   for (ndx; ndx < MAX_BUFFER_SIZE; ndx++) {
+      if (buf->cache[ndx].diskPage.FD == diskPage.FD && buf->cache[ndx].diskPage.pageId == diskPage.pageId) {
+         return SUCCESS;
+      }
+   }
+
+   return ERROR;
+}
+
 //returns the index of the page in the buffer
 //returns an error code if the page does not exist in buffer
 int getBufferIndex(Buffer *buf, DiskAddress diskPage) {
@@ -196,6 +209,20 @@ int getBufferIndex(Buffer *buf, DiskAddress diskPage) {
 
    for (ndx; ndx < MAX_BUFFER_SIZE; ndx++) {
       if (buf->pages[ndx].diskPage.FD == diskPage.FD && buf->pages[ndx].diskPage.pageId == diskPage.pageId) {
+         return ndx;
+      }
+   }
+
+   return ERROR;
+}
+
+//returns the index of the page in the buffer
+//returns an error code if the page does not exist in buffer
+int getCacheIndex(Buffer *buf, DiskAddress diskPage) {
+   int ndx = 0;
+
+   for (ndx; ndx < MAX_BUFFER_SIZE; ndx++) {
+      if (buf->cache[ndx].diskPage.FD == diskPage.FD && buf->cache[ndx].diskPage.pageId == diskPage.pageId) {
          return ndx;
       }
    }
@@ -328,4 +355,27 @@ int allocateCachePage(Buffer *buf, DiskAddress diskPage) {
       buf->cache[availCachePage].isVolatile = 1;
       buf->cache[availCachePage].isAvailable = 0;
    }
+
+   return SUCCESS;
+}
+
+/**
+ * Remove a cache page.
+ * Mark it as available, zero out its things.
+ */
+int removeCachePage(Buffer *buf, DiskAddress diskPage) {
+   int index;
+   if ((index = getCacheIndex(buf, diskPage)) == ERROR ) {
+      // We tried to empty out something we shouldn't have.
+      return ERROR;
+   }
+
+   buf->cache[index].isAvailable = 1;
+   // zero out the block and diskpage, too.
+   memset(&(buf->cache[index].diskPage), 0, sizeof(DiskAddress));
+   memset(&(buf->cache[index].block), 0, BLOCKZISE);
+
+   buf->numCacheOccupied--;
+
+   return SUCCESS;
 }

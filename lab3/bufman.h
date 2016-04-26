@@ -15,7 +15,8 @@ typedef struct {
 
 typedef struct { /* single disk block */
    char block[BLOCKSIZE]; /* block content */
-   char isVolitile;
+   char isVolatile;
+   char isAvailable;
    DiskAddress diskPage;
 } Block;
 
@@ -76,3 +77,7 @@ int touchBlock(Buffer *buf, DiskAddress diskPage);
 int getBufferIndex(Buffer *buf, DiskAddress diskPage);
    
 void checkpoint(Buffer *buf);
+
+int getAvailableCachePage(Buffer *buf);
+int getAvailableBufferPage(Buffer *buf);
+int allocateCachePage(Buffer *buf, DiskAddress diskPage);

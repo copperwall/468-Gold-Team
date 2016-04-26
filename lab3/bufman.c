@@ -19,7 +19,16 @@ int commence(char *database, Buffer *buf, int nBufferBlocks, int nCacheBlocks) {
    buf->nCacheBlocks = nCacheBlocks;
    buf->numBufferOccupied = 0;
    buf->numCacheOccupied = 0;
-   
+
+   // Initialize all buffer and cache slots to be available.
+   int i;
+   for (i = 0; i < MAX_BUFFER_SIZE; i++) {
+      buf->cache[i].isAvailable = 1;
+      buf->cache[i].isVolatile = 1;
+      buf->pages[i].isAvailable = 1;
+      buf->pages[i].isVolatile = 0;
+   }
+
    return SUCCESS;
 }
 
@@ -267,11 +276,56 @@ int printBlock(Buffer *buf, DiskAddress diskPage) {
       return ERROR;
 }
 
-/* int main() { */
-/*    Buffer buf = {}; //inializes all fields to 0 */
+int getAvailableCachePage(Buffer *buf) {
+   int i;
 
-/*    chkerr(commence(DEFAULT_DISK_NAME, &buf, MAX_BUFFER_SIZE)); */
+   for (i = 0; i < buf->numCacheOccupied; i++) {
+      if (buf->cache[i].isAvailable) {
+         return i;
+      }
+   }
 
-/*    chkerr(squash(&buf)); */
-/*    return SUCCESS; */
-/* } */
+   return -1;
+}
+
+int getAvailableBufferPage(Buffer *buf) {
+   int i;
+
+   for (i = 0; i < buf->numBufferOccupied; i++) {
+      if (buf->pages[i].isAvailable) {
+         return i;
+      }
+   }
+
+   return -1;
+}
+
+int allocateCachePage(Buffer *buf, DiskAddress diskPage) {
+   // Lookup available page.
+   int availCachePage = getAvailableCachePage(buf);
+   int availBufferPage;
+   int eviction;
+
+   if (availCachePage < 0) {
+      // pick cache page for eviction
+      // random eviction strategy
+      eviction = rand() % MAX_BUFFER_SIZE;
+
+      // cpy block to persistent storage
+      availBufferPage = getLRUPage(buf);
+
+      // If the page is dirty, flush
+      if (buf->dirty[availBufferPage]) {
+         flushPage(buf, buf->pages[availBufferPage].diskPage);
+      }
+
+      memcpy(&buf->cache[availCachePage], &buf->pages[availBufferPage], sizeof(Block));
+
+      buf->cache[eviction].isAvailable = 0;
+      memcpy(&(buf->cache[eviction].diskPage), &diskPage, sizeof(DiskAddress));
+   } else {
+      buf->cache[availCachePage].diskPage = diskPage;
+      buf->cache[availCachePage].isVolatile = 1;
+      buf->cache[availCachePage].isAvailable = 0;
+   }
+}

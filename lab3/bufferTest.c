@@ -121,7 +121,7 @@ int main(int argc, char *argv[]) {
             newPage(buf, tfs_fd, &newAddress);
          }
 
-         tfs_closeFile(tfs_fd);
+         strcpy(openFiles[tfs_fd], filename);
       } else if (!strcmp(command, "check")) {
          // Call checkpoint of Test API
          checkpoint(buf);

@@ -247,7 +247,8 @@ void checkpoint(Buffer *buf) {
    printf("Slots occupied: %d\n", buf->numBufferOccupied);
    for (i = 0; i < buf->numBufferOccupied; i++) {
       printf("Buffer Slot %d\n", i);
-      printf("\tBlockID: %d\n", (buf->pages[i]).diskPage);
+      printf("\tFD: %d\n", (buf->pages[i]).diskPage.FD);
+      printf("\tPageid: %d\n", (buf->pages[i]).diskPage.pageId);
       printf("\tTimestamp: %ld\n", buf->timestamp[i]);
       printf("\tPin: %d\n", buf->pin[i]);
       printf("\tDirty page: %d\n\n", buf->dirty[i]);

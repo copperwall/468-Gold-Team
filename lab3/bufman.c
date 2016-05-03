@@ -44,7 +44,7 @@ int squash(Buffer * buf) {
 
 //read access to the disk page
 int readPage(Buffer *buf, DiskAddress diskPage) {
-   if(pageExistsInBuffer(buf, diskPage)) {
+   if (pageExistsInBuffer(buf, diskPage) == SUCCESS) {
       touchBlock(buf, diskPage);
    }
    else {
@@ -73,7 +73,7 @@ int flushPage(Buffer *buf, DiskAddress diskPage) {
    tfs_writePage(diskPage.FD, diskPage.pageId, buf->pages[bufferIndex].block);
 
    buf->dirty[bufferIndex] = 0;
-   
+
    return SUCCESS;
 }
 
@@ -168,8 +168,8 @@ int loadPage(Buffer *buf, DiskAddress diskPage) {
       if (buf->dirty[victimPage]) {
          chkerr(flushPage(buf, buf->pages[victimPage].diskPage));
       }
-      
-      tfs_readPage(diskPage.FD, diskPage.pageId, 
+
+      tfs_readPage(diskPage.FD, diskPage.pageId,
          buf->pages[victimPage].block);
    }
    touchBlock(buf, diskPage);
@@ -178,10 +178,10 @@ int loadPage(Buffer *buf, DiskAddress diskPage) {
 
 //return SUCCESS (0) if the page exists in the buffer.  Otherwise ERROR (0).
 int pageExistsInBuffer(Buffer *buf, DiskAddress diskPage) {
-   int ndx = 0;
+   int ndx;
 
-   for (ndx; ndx < MAX_BUFFER_SIZE; ndx++) {
-      if (buf->pages[ndx].diskPage.FD == diskPage.FD && buf->pages[ndx].diskPage.pageId == diskPage.pageId) {
+   for (ndx = 0; ndx < buf->numBufferOccupied; ndx++) {
+      if ((buf->pages[ndx].diskPage.FD == diskPage.FD) && (buf->pages[ndx].diskPage.pageId == diskPage.pageId)) {
          return SUCCESS;
       }
    }
@@ -205,7 +205,7 @@ int pageExistsInCache(Buffer *buf, DiskAddress diskPage) {
 //returns the index of the page in the buffer
 //returns an error code if the page does not exist in buffer
 int getBufferIndex(Buffer *buf, DiskAddress diskPage) {
-   int ndx = 0; 
+   int ndx = 0;
 
    for (ndx; ndx < MAX_BUFFER_SIZE; ndx++) {
       if (buf->pages[ndx].diskPage.FD == diskPage.FD && buf->pages[ndx].diskPage.pageId == diskPage.pageId) {
@@ -274,7 +274,7 @@ int pageDump(Buffer *buf, int index) {
 int printPage(Buffer *buf, DiskAddress diskPage) {
    int i, ndx;
    if (readPage(buf, diskPage)) {
-      if (pageExistsInBuffer(buf, diskPage)) {
+      if (pageExistsInBuffer(buf, diskPage) == SUCCESS) {
          ndx = getBufferIndex(buf, diskPage);
          return pageDump(buf, ndx);
       }

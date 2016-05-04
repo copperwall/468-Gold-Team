@@ -186,7 +186,7 @@ int loadPage(Buffer *buf, DiskAddress diskPage) {
    return SUCCESS;
 }
 
-//return SUCCESS (0) if the page exists in the buffer.  Otherwise ERROR (0).
+// Returns SUCCESS (0) if the page exists in the buffer.  Otherwise ERROR (-1).
 int pageExistsInBuffer(Buffer *buf, DiskAddress diskPage) {
    int ndx;
 
@@ -199,7 +199,7 @@ int pageExistsInBuffer(Buffer *buf, DiskAddress diskPage) {
    return ERROR;
 }
 
-//return SUCCESS (0) if the page exists in the buffer.  Otherwise ERROR (0).
+// Returns SUCCESS (0) if the page exists in the cache.  Otherwise ERROR (-1).
 int pageExistsInCache(Buffer *buf, DiskAddress diskPage) {
    int ndx = 0;
 
@@ -214,6 +214,7 @@ int pageExistsInCache(Buffer *buf, DiskAddress diskPage) {
 
 //returns the index of the page in the buffer
 //returns an error code if the page does not exist in buffer
+// TODO: Make sure to look at pages that are actually occupied.
 int getBufferIndex(Buffer *buf, DiskAddress diskPage) {
    int ndx = 0;
 
@@ -226,14 +227,39 @@ int getBufferIndex(Buffer *buf, DiskAddress diskPage) {
    return ERROR;
 }
 
-//returns the index of the page in the buffer
-//returns an error code if the page does not exist in buffer
+//returns the index of the page in the cache
+//returns an error code if the page does not exist in cache
+//
+// TODO: Only look at pages that are actually occupied.
 int getCacheIndex(Buffer *buf, DiskAddress diskPage) {
    int ndx = 0;
 
    for (ndx; ndx < MAX_BUFFER_SIZE; ndx++) {
-      if (buf->cache[ndx].diskPage.FD == diskPage.FD && buf->cache[ndx].diskPage.pageId == diskPage.pageId) {
-         return ndx;
+      if (buf->cache[ndx].isAvailable) {
+         if (buf->cache[ndx].diskPage.FD == diskPage.FD && buf->cache[ndx].diskPage.pageId == diskPage.pageId) {
+            return ndx;
+         }
+      }
+   }
+
+   return ERROR;
+}
+
+/**
+ * This function is useful for when a volatile disk address is not found in
+ * the volatile cache. We need to search the non-volatile buffer for any
+ * volatile pages.
+ */
+int getCacheIndexFromBuffer(Buffer *buf, DiskAddress diskPage) {
+   int ndx;
+   Block *current;
+
+   for (ndx = 0; ndx < buf->numBufferOccupied; ndx++) {
+      current = &(buf->pages[ndx]);
+      if (current->isVolatile && !current->isAvailable) {
+         if (current->diskPage.FD == diskPage.FD && current->diskPage.pageId == diskPage.pageId) {
+            return ndx;
+         }
       }
    }
 
@@ -317,25 +343,26 @@ int printBlock(Buffer *buf, DiskAddress diskPage) {
 int getAvailableCachePage(Buffer *buf) {
    int i;
 
-   for (i = 0; i < buf->numCacheOccupied; i++) {
+   for (i = 0; i < buf->nCacheBlocks; i++) {
       if (buf->cache[i].isAvailable) {
          return i;
       }
    }
 
-   return -1;
+   return ERROR;
 }
 
+// TODO: This isn't used, used it.
 int getAvailableBufferPage(Buffer *buf) {
    int i;
 
-   for (i = 0; i < buf->numBufferOccupied; i++) {
+   for (i = 0; i < buf->nBufferBlocks; i++) {
       if (buf->pages[i].isAvailable) {
          return i;
       }
    }
 
-   return -1;
+   return ERROR;
 }
 
 int allocateCachePage(Buffer *buf, DiskAddress diskPage) {
@@ -374,11 +401,23 @@ int allocateCachePage(Buffer *buf, DiskAddress diskPage) {
  * Remove a cache page.
  * Mark it as available, zero out its things.
  */
+
+// TODO: Does this search the buffer? No
+// TODO: Make a function that searches non-volatile storage
 int removeCachePage(Buffer *buf, DiskAddress diskPage) {
    int index;
-   if ((index = getCacheIndex(buf, diskPage)) == ERROR ) {
-      // We tried to empty out something we shouldn't have.
-      return ERROR;
+   if ((index = getCacheIndex(buf, diskPage)) == ERROR) {
+      // The page is not in volatile storage.
+      // We have to search non-volatile storage to make sure it wasn't evicted.
+      if ((index = getCacheIndexFromBuffer(buf, diskPage)) == ERROR) {
+         return ERROR;
+      }
+
+      // Set available bit to 0 volatile bit is to 0
+      buf->pages[index].isVolatile = 0;
+      buf->pages[index].isAvailable = 1;
+
+      return SUCCESS;
    }
 
    buf->cache[index].isAvailable = 1;
@@ -386,6 +425,9 @@ int removeCachePage(Buffer *buf, DiskAddress diskPage) {
    memset(&(buf->cache[index].diskPage), 0, sizeof(DiskAddress));
    memset(&(buf->cache[index].block), 0, BLOCKSIZE);
 
+   // TODO: If we do this we can't use numCacheOccupied like we used
+   // numBufferOccupied. numCacheOccupied will not signify the end of available
+   // volatile slots.
    buf->numCacheOccupied--;
 
    return SUCCESS;

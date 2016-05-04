@@ -60,6 +60,5 @@ int tfs_rename(char* oldname, char* newname);
 /* Lists all files on the disk, and some information about each */
 int tfs_readDir(void);
 
-
 /* Displays the creation, last modification, and last access times of a file */
 int tfs_readFileInfo(fileDescriptor FD);

@@ -77,21 +77,31 @@ int flushPage(Buffer *buf, DiskAddress diskPage) {
    return SUCCESS;
 }
 
-//pin the page
-// Scott
+// Pin the page.
 int pinPage(Buffer *buf, DiskAddress diskPage) {
-   buf->pin[diskPage.pageId] = 1;
+   int bufferIndex = getBufferIndex(buf, diskPage);
+
+   if (bufferIndex == ERROR) {
+      return ERROR;
+   }
+
+   buf->pin[bufferIndex] = 1;
    return SUCCESS;
 }
 
-//unpin the page
-// Scott
+// Unpin the page.
 int unPinPage(Buffer *buf, DiskAddress diskPage) {
-   buf->pin[diskPage.pageId] = 0;
+   int bufferIndex = getBufferIndex(buf, diskPage);
+
+   if (bufferIndex == ERROR) {
+      return ERROR;
+   }
+
+   buf->pin[bufferIndex] = 0;
    return SUCCESS;
 }
 
-//add a new disk page
+// Add a new disk page.
 int newPage(Buffer *buf, fileDescriptor FD, DiskAddress * diskPage) {
    int newBufferIndex;
    Block *newBlock;

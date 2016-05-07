@@ -1,6 +1,7 @@
 #include "tinyFS.h"
 #include "libTinyFS.h"
 #include "tinyFS_errno.h"
+#include "floppy.h"
 #define MAX_BUFFER_SIZE 100
 //macro checks if function returns an error and if it
 //does then the error code is immediately returned
@@ -31,6 +32,7 @@ typedef struct { /* Main Memory Buffer */
    char dirty[MAX_BUFFER_SIZE]; /* Dirty Page flags */
    int numBufferOccupied; /* Number of occupied persistent buffer slots */
    int numCacheOccupied; /* Number of occupied volatile buffer slots */
+   tableDescription *tables; /* Linked list of table descriptions */
 } Buffer;
 
 //initialize the buffer
@@ -79,7 +81,7 @@ int touchBlock(Buffer *buf, DiskAddress diskPage);
 //returns an error code if the page does not exist in buffer
 int getBufferIndex(Buffer *buf, DiskAddress diskPage);
 int getCacheIndex(Buffer *buf, DiskAddress diskPage);
-   
+
 void checkpoint(Buffer *buf);
 
 int getAvailableCachePage(Buffer *buf);

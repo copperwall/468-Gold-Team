@@ -29,6 +29,9 @@ int commence(char *database, Buffer *buf, int nBufferBlocks, int nCacheBlocks) {
       buf->pages[i].isVolatile = 0;
    }
 
+   // Initialize table list to be empty.
+   buf->tables = NULL;
+
    return SUCCESS;
 }
 

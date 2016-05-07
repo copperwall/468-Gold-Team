@@ -1,7 +1,6 @@
 #include "tinyFS.h"
 #include "libTinyFS.h"
 #include "tinyFS_errno.h"
-#include "floppy.h"
 #define MAX_BUFFER_SIZE 100
 //macro checks if function returns an error and if it
 //does then the error code is immediately returned

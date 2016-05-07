@@ -1,5 +1,7 @@
 /* FLOPPY */
 
+#define E_TABLE_EXISTS -2
+
 typedef enum {INT, FLOAT, VARCHAR, DATETIME, BOOLEAN} floppy_data_type;
 
 /**
@@ -24,4 +26,5 @@ typedef struct Tables {
    Attribute *pKey;           // The pointer to the first Attribute of the PK
    foreignKeys *fKeys;        // The pointer to the first FK
    int isVolatile;            // Boolean for whether or not the table is volatile
+   struct Tables *next;       // The next table in the linked list
 } tableDescription;

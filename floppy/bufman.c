@@ -1,3 +1,4 @@
+#include "floppy.h"
 #include "bufman.h"
 #include <unistd.h>
 #include <stdio.h>

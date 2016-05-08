@@ -87,9 +87,8 @@ int write(Buffer *buf, DiskAddress page, int startOffset, int nBytes, char *data
    if (dataSize < nBytes) {
       // write |dataSize| bytes, pad the rest up to nBytes with 0
       memcpy(block + startOffset, data, nBytes);
-   }
-
-   if (dataSize >= nBytes) {
+   } else {
       memcpy(block + startOffset, data, nBytes);
    }
+   return SUCCESS;
 }

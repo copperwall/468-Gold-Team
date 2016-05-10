@@ -12,7 +12,7 @@ int main() {
 
   char* diskName = DEFAULT_DISK_NAME;
 
-  printf("TinyFS tests \n Creating a new file system:\n");
+  printf("TinyFS tests =>  Creating a new file system:\n");
   tfs_mkfs(DEFAULT_DISK_NAME,DEFAULT_DISK_SIZE);  
 
   /*mounting the FS */
@@ -31,15 +31,25 @@ int main() {
   for(index=0;index < pageSize; index++)
     printf("%c",buffer[index]);
   printf("\n -- done\n");
-  tfs_closeFile(a);
+  tfs_closeFile(b);
 
-  tfs_readPage(a,0,buffer); /* should fail because file is closed */
+  tfs_readPage(b,0,buffer); /* should fail because file is closed */
 
-  d = tfs_openFile("ff8"); 
-  printf("file a has %i pages \n",tfs_numPages(a));
+  d = tfs_openFile("file2"); 
+  printf("file d (descriptor: %i) has %i pages \n",d,tfs_numPages(d));
   tfs_readDir();
-
   printf("\n Now deleting the file\n");
-  tfs_deleteFile(a);
+  tfs_deleteFile(d);
   tfs_readDir();
+  tfs_closeFile(a);
+  tfs_closeFile(c);
+  tfs_unmount();
+
+  tfs_mount(DEFAULT_DISK_NAME);
+  a = tfs_openFile("ff8");
+  printf("file a (descriptor: %i) has %i pages \n",a,tfs_numPages(a));
+  tfs_readDir();
+  tfs_unmount();
+
+  
 }

@@ -15,11 +15,14 @@
 #define EXTENT      3
 #define FREE        4
 
+/* Superblock location */
+#define SB_LOCATION 0
+
 /* Superblock specific format offsets */
 #define SB_DISKNAME 4   /* 16 bytes for disk name */
 #define SB_DISKSIZE 20  /* 2 bytes for total size in blocks */
 #define SB_TOPINODE 22  /* 2 bytes to address top inode */
-#define SB_FREEVECT 24  /* rest = 1000 bytes for free bitvector */
+#define SB_FREEVECT 24  /* rest ~ 2000 bytes for free bitvector */
 
 /* Inode block specific format offsets */
 #define IN_FILENAME 4   /* 8 bytes for file name */
@@ -35,6 +38,8 @@
 #define TFS_DISK_NAME_SIZE 16
 #define TFS_NAME_SIZE 8
 #define TFS_MAGICNUMBER 0x46
+
+#define MAX_DISK_SIZE ((BLOCKSIZE-SB_FREEVECT) * BLOCKSIZE) //about 32MB
 
 #define DEFAULT_DISK_SIZE 100000
 /* use this name for a default disk file name */

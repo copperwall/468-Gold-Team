@@ -15,9 +15,7 @@
 int getPage(Buffer *buf, DiskAddress page, char *out) {
    int index;
 
-   index = getCacheIndex(buf, page);
-
-   if ((index = getBufferIndex(buf, page)) == ERROR) {
+   if ((index = getCacheIndex(buf, page)) == ERROR) {
       if ((index = getBufferIndex(buf, page)) == ERROR) {
          return ERROR;
       }
@@ -36,7 +34,7 @@ int putPage(Buffer *buf, DiskAddress page, char *data, int dataSize) {
       return ERROR;
    }
 
-   if ((index = getBufferIndex(buf, page)) == ERROR) {
+   if ((index = getCacheIndex(buf, page)) == ERROR) {
       if ((index = getBufferIndex(buf, page)) == ERROR) {
          // TODO: Make new page
          // UNIMPLEMENTED

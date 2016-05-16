@@ -22,8 +22,7 @@ int createPersistentTable(Buffer *buf, tableDescription table) {
 
    while (tables != NULL) {
       if (!strcmp(tables->tableName, table.tableName)) {
-         // TODO: Make Table Exists error define
-         return ERROR;
+         return E_TABLE_EXISTS;
       }
 
       prev = tables;

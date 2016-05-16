@@ -1,8 +1,10 @@
 // Heap File Stuff goes here
 
+#define MAX_TABLENAME_SIZE 50
+
 typedef struct heap_file_header {
    // Table name
-   char table_name[MAX_TABLENAME_SIZE] table_name;
+   char table_name[MAX_TABLENAME_SIZE];
    // TODO: Record description as another char array
    // The number of bytes in a record
    int record_size;                                      
@@ -24,10 +26,6 @@ typedef struct page_header {
    int max_records;                 
    // Number of record slots used.
    int num_occupied;                
-   // Needs to be large enough to hold the number of records in a page.
-   // Maybe the bitmap should be at the end of the struct because it's dynamic.
-   // It makes de/serialization a little weird, but oh well
-   // TODO: bitmap,                 
    // Timestamp for when the page is first created.
    int create_timestamp;
    // Timestamp for when the page was last flushed to disk.
@@ -36,8 +34,12 @@ typedef struct page_header {
    int next_page;
    // Pageid for the first page in the freelist.
    int freelist;
-} PageHeader
+   // Needs to be large enough to hold the number of records in a page.
+   // Maybe the bitmap should be at the end of the struct because it's dynamic.
+   // It makes de/serialization a little weird, but oh well
+   // TODO: bitmap
+} PageHeader;
 
 // File Creation
-int createHeapFile(Buffer *buf, char *tableName, tableDescription createTable, int volatileFlag);
+int createHeapFile(Buffer *buf, char *tableName, tableDescription createTable);
 int deleteHeapFile(Buffer *buf, char *tableName);

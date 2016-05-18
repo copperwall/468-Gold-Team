@@ -1,5 +1,7 @@
 /* FLOPPY */
 
+#include <stdint.h>
+
 #define E_TABLE_EXISTS -2
 
 typedef enum {INT, FLOAT, VARCHAR, DATETIME, BOOLEAN} floppy_data_type;
@@ -11,6 +13,7 @@ typedef enum {INT, FLOAT, VARCHAR, DATETIME, BOOLEAN} floppy_data_type;
 typedef struct Attribute {
    char *attName;             // Attribute name
    floppy_data_type attType;  // Attribute type
+   uint8_t attSize;           // Attribute size (this is only used for varchars) 1 byte
    struct Attribute *next;    // Next Attribute in linked list
 } Attribute;
 

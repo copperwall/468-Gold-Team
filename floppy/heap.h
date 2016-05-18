@@ -6,6 +6,8 @@ typedef struct heap_file_header {
    // Table name
    char table_name[MAX_TABLENAME_SIZE];
    // TODO: Record description as another char array
+   // The number of bytes the record description is.
+   int record_desc_size;
    // The number of bytes in a record
    int record_size;                                      
    // The first data pageid of the file
@@ -43,3 +45,5 @@ typedef struct page_header {
 // File Creation
 int createHeapFile(Buffer *buf, char *tableName, tableDescription createTable);
 int deleteHeapFile(Buffer *buf, char *tableName);
+
+int generateRecordDescription(tableDescription table, char *record, int *recordSize);

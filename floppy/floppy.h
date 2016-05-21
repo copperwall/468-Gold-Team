@@ -29,5 +29,6 @@ typedef struct Tables {
    Attribute *pKey;           // The pointer to the first Attribute of the PK
    foreignKeys *fKeys;        // The pointer to the first FK
    int isVolatile;            // Boolean for whether or not the table is volatile
+   int fd;                    // The file descriptor for this table.
    struct Tables *next;       // The next table in the linked list
 } tableDescription;

@@ -43,7 +43,7 @@ int createPersistentTable(Buffer *buf, tableDescription table) {
    // Create a new tinyFS datafile for storing the data. Filename should be
    // tablename.
    // TODO: Hmmm, should fd be part of the tables list in the buffer?
-   header.FD = tfs_openFile(table.tableName); 
+   header.FD = newTable->fd = tfs_openFile(table.tableName);
    header.pageId = 0;
 
    // Read file header page into buffer (pageid 0)

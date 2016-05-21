@@ -46,21 +46,43 @@ int createHeapFile(Buffer *buf, char *tableName, tableDescription createTable) {
  * buffer.
  */
 int deleteHeapFile(Buffer *buf, char *tableName) {
-   // Grab the table from the table list in the buffer.
-   //
-   // If it's volatile, remove the dummy tinyFS fd and remove all of its pages
-   // from volatile/persistent storage.
-   //
-   // NOTE: Volatile pages can be in both the volatile and non-volatile
-   // storage, so check both.
-   //
-   // If it's not volatile then only look for pages with its fd in the
-   // persistent storage.
-   //
-   // NOTE: I'm not sure if we have a function for removing persistent pages
-   // from the buffer. Might need to go in buffer manager.
-   //
-   // I think that should be it.
+   tableDescription *table = buf->tables;
+   int i, fd;
+
+   while (table != NULL) {
+      if (!strcmp(table->tableName, tableName)) {
+         fd = table->fd;
+      }
+
+      table = table->next;
+   }
+
+   if (table == NULL) {
+      // Table not found.
+      return ERROR;
+   }
+
+   tfs_deleteFile(fd);
+
+   // Mark all pages in the buffer with that fd as available.
+   for (i = 0; i < MAX_BUFFER_SIZE; i++) {
+      if (!buf->pages[i].isAvailable) {
+         if (buf->pages[i].diskPage.FD == fd) {
+            buf->pages[i].isAvailable = 1;
+         }
+      }
+   }
+
+   // Mark all pages in the cache with that fd as available.
+   for (i = 0; i < MAX_BUFFER_SIZE; i++) {
+      if (!buf->cache[i].isAvailable) {
+         if (buf->cache[i].diskPage.FD == fd) {
+            buf->cache[i].isAvailable = 1;
+         }
+      }
+   }
+
+   return SUCCESS;
 }
 
 /**

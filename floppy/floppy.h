@@ -4,7 +4,8 @@
 
 #define E_TABLE_EXISTS -2
 
-typedef enum {INT, FLOAT, VARCHAR, DATETIME, BOOLEAN} floppy_data_type;
+// Padding is used in record descriptions on the file header page.
+typedef enum {INT, FLOAT, VARCHAR, DATETIME, BOOLEAN, PADDING} floppy_data_type;
 
 /**
  * Table creation structs

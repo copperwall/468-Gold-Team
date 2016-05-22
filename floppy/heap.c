@@ -47,13 +47,25 @@ int createHeapFile(Buffer *buf, char *tableName, tableDescription createTable) {
  */
 int deleteHeapFile(Buffer *buf, char *tableName) {
    tableDescription *table = buf->tables;
+   tableDescription *prev = NULL;
    int i, fd;
 
+   // Find the table and remove it from the linked list.
    while (table != NULL) {
       if (!strcmp(table->tableName, tableName)) {
          fd = table->fd;
+
+         // Remove the entry from the linked list.
+         if (prev == NULL) {
+            buf->tables = table->next;
+         } else {
+            prev->next = table->next;
+         }
+
+         break;
       }
 
+      prev = table;
       table = table->next;
    }
 
@@ -110,20 +122,48 @@ int generateRecordDescription(tableDescription table, char *record, int *recordS
    char *record_head = record;
    int bytes_copied = 0;
    int record_size = 0;
+   // The number of bytes needed for padding.
+   uint8_t padding;
 
    while (current != NULL) {
-      // write the string name to the buffer
-      // Totally overflowable, whatever.
-      // The + 1 is to also write the null character.
-      //
-      // TODO: Do padding before adding the current attribute, so that if the
-      // attribute a float, we can pad it accordingly.
+
+      // If the number of bytes copied to the buffer is not divisble by the
+      // number of bytes required by the current attribute's data type, add the
+      // correct number of padding bytes.
+      switch (current->attType) {
+         case INT:
+         case DATETIME:
+         case BOOLEAN:
+         case VARCHAR:
+            // Make sure the record_size is divisible by four
+            if (record_size % 4 != 0) {
+               padding = 4 - (record_size % 4);
+               memset(record_head++, PADDING, 1);
+               memcpy(record_head++, &padding, sizeof(uint8_t));
+               record_size += padding;
+            }
+
+            break;
+         case FLOAT:
+            // Make sure the record_size is divisible by eight
+            if (record_size % 8 != 0) {
+               padding = 8 - (record_size % 8);
+               memset(record_head++, PADDING, 1);
+               memcpy(record_head++, &padding, sizeof(uint8_t));
+               record_size += padding;
+            }
+
+            break;
+         default:
+            // Problem! The type did not match any known type.
+            return ERROR;
+      }
+
       memcpy(record_head, current->attName, strlen(current->attName) + 1);
       record_head += strlen(current->attName) + 1;
       bytes_copied += strlen(current->attName) + 1;
 
-      memcpy(record_head, &(current->attType), 1);
-      ++record_head;
+      memcpy(record_head++, &(current->attType), sizeof(uint8_t));
       ++bytes_copied;
 
       if (current->attType == VARCHAR) {
@@ -133,9 +173,8 @@ int generateRecordDescription(tableDescription table, char *record, int *recordS
          // We also need to make sure that the size is set by the
          // parser/whatever to be the varchar size + 1 for the null terminating
          // byte.
-         memcpy(record_head, &(current->attSize), sizeof(uint8_t));
+         memcpy(record_head++, &(current->attSize), sizeof(uint8_t));
          ++bytes_copied;
-         ++record_head;
       }
 
       // The record_head is now pointing at the type byte.

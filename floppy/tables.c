@@ -1,6 +1,7 @@
 #include "floppy.h"
 #include "bufman.h"
 #include "tables.h"
+#include "heap.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -35,28 +36,8 @@ int createPersistentTable(Buffer *buf, tableDescription table) {
 
    prev->next = newTable;
 
-
-   // Create a descriptor for the record structure of the database file
-   // Maybe this means just a byte array that has enough space for all of the
-   // attributes listed?
-
-   // Create a new tinyFS datafile for storing the data. Filename should be
-   // tablename.
-   // TODO: Hmmm, should fd be part of the tables list in the buffer?
-   header.FD = newTable->fd = tfs_openFile(table.tableName);
-   header.pageId = 0;
-
-   // Read file header page into buffer (pageid 0)
-   chkerr(readPage(buf, header));
-
-   // Write necessary information onto header page.
-   // This includes the descriptor of the record strucutre that you have
-   // constructed in Step 2.
-   // TODO: What else should be stored in header page?
-   // TODO: Need read/write functionality to write header page.
-
-   // Force write the page back to disk.
-   flushPage(buf, header);
+   // Create heapfile for new table
+   chkerr(createHeapFile(buf, table.tableName, table));
 
    return SUCCESS;
 }

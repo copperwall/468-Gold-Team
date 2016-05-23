@@ -1,6 +1,7 @@
 #include <string.h>
 #include "floppy.h"
 #include "bufman.h"
+#include "readwrite.h"
 #include "tables.h"
 #include "heap.h"
 
@@ -28,15 +29,41 @@ int createHeapFile(Buffer *buf, char *tableName, tableDescription createTable) {
    // size of each record.
    //
    // We could also set pageid 1 as the next_page and freelist value.
-   HeapFilerHeader file_header;
-
-   file_header.next_page = file_header.freelist = 1;
-   strncpy(file_header.table_name, tableName, MAX_TABLENAME_SIZE);
+   HeapFilerHeader fileHeader;
+   DiskAddress diskPage;
+   // TODO: Make a constant for the max recorddescription size.
    char recordDescription[2048];
-   int recordSize;
+   char headerPage[BLOCKSIZE];
+   int recordSize, fd;
 
-   file_header.record_desc_size = generateRecordDescription(createTable, recordDescription, &recordSize);
-   file_header.record_size = recordSize;
+   fileHeader.next_page = fileHeader.freelist = 1;
+   strncpy(fileHeader.table_name, tableName, MAX_TABLENAME_SIZE);
+
+   fileHeader.record_desc_size = generateRecordDescription(createTable, recordDescription, &recordSize);
+   fileHeader.record_size = recordSize;
+
+   // Have a page buffer and fill it first with the static part of the file
+   // header.
+   //
+   // After that place the record description in it.
+   memcpy(headerPage, &fileHeader, sizeof(HeapFilerHeader));
+   memcpy(headerPage + sizeof(HeapFilerHeader), recordDescription, fileHeader.record_desc_size);
+
+   // Open new file with the table name
+   diskPage.FD = tfs_openFile(createTable.tableName);
+   diskPage.pageId = 0;
+
+   if (!createTable.isVolatile) {
+      // Then put the page into the buffer with the new fd and pageid 0 and
+      // flush the page.
+      putPage(buf, diskPage, headerPage, BLOCKSIZE);
+   } else {
+      putVolatilePage(buf, diskPage, headerPage, BLOCKSIZE);
+   }
+
+   flushPage(buf, diskPage);
+
+   return SUCCESS;
 }
 
 /**

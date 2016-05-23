@@ -72,7 +72,6 @@ int createVolatileTable(Buffer *buf, tableDescription table) {
 
    prev->next = newTable;
 
-   // TODO: Is there anything else to do?
-   // Do we write a table header to a page header in the volatile cache?
+   chkerr(createHeapFile(buf, table.tableName, table));
    return SUCCESS;
 }

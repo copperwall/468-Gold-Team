@@ -47,3 +47,6 @@ int createHeapFile(Buffer *buf, char *tableName, tableDescription createTable);
 int deleteHeapFile(Buffer *buf, char *tableName);
 
 int generateRecordDescription(tableDescription table, char *record, int *recordSize);
+int insertRecord(char * tableName, char * record, DiskAddress * location);
+int deleteRecord(DiskAddress page, int recordId);
+int updateRecord(DiskAddress page, int recordId, char *record);

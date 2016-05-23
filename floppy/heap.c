@@ -227,3 +227,31 @@ int generateRecordDescription(tableDescription table, char *record, int *recordS
 
    return bytes_copied;
 }
+
+/////////////////////
+// CRUD Operations
+/////////////////////
+
+int insertRecord(char * tableName, char * record, DiskAddress * location) {
+   // Need to lookup fd from tableName
+   // Go to the first pageid of the freelist and find the first free location
+   // from the bitmap. Update the bitmap.
+   // Update the freelist if that was the last free space.
+   // Record the diskaddress in the location out param.
+   return ERROR;
+}
+
+int deleteRecord(DiskAddress page, int recordId) {
+   // Read the diskaddress into the buffer, read the record size and go to that
+   // offset after the page header.
+   // Maybe just set the bitmap to available.
+   //
+   // Update the freelist if that's the first free space.
+   return ERROR;
+}
+
+int updateRecord(DiskAddress page, int recordId, char *record) {
+   // Read in the diskaddress and go to the record offset and write in the
+   // updated record.
+   return ERROR;
+}

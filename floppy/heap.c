@@ -257,7 +257,8 @@ int updateRecord(DiskAddress page, int recordId, char *record) {
 }
 
 // Loads the Heap File Header page into the buffer if not present, otherwise returns contents of that page 
-int getHeapHeader(fileDescriptor fileId, Buffer *buf, char *out) {
+int getHeapHeader(fileDescriptor fileId, Buffer *buf, HeapFilerHeader *header) {
+   char out[BLOCKSIZE];
    DiskAddress diskPage;
    diskPage.FD = fileId;
    diskPage.pageId = 0;
@@ -276,15 +277,17 @@ int getHeapHeader(fileDescriptor fileId, Buffer *buf, char *out) {
       // If in Buffer, read from Buffer
       getPage(buf, diskPage, out);
    }
+   memcpy(header, out, sizeof(HeapFilerHeader));
+
    return SUCCESS;
 }
-// TODO: memcpy needs to be updated when record description array is put into header
+
 int heapHeaderGetTableName(fileDescriptor fileId, Buffer *buf, char *name) {
-   char blockContent[BLOCKSIZE];
+   HeapFilerHeader *header;
    //get the contents of the heap file header page
-   getHeapHeader(fileId, buf, blockContent);
+   getHeapHeader(fileId, buf, header);
    //Load the tablename into *name
-   memcpy(name, blockContent, MAX_TABLENAME_SIZE);
+   memcpy(name, header->table_name, MAX_TABLENAME_SIZE);
    return SUCCESS;
 }
 
@@ -292,23 +295,23 @@ int heapHeaderGetRecordDesc(fileDescriptor fileId, char *bytes) {
    //Get the record descriptor structure
    return ERROR;
 }
-// TODO: memcpy needs to be updated when record description array is put into header
+
 int heapHeaderGetNextPage(fileDescriptor fileId, DiskAddress *page, Buffer *buf) {
-   char blockContent[BLOCKSIZE];
+   HeapFilerHeader *header;
    // Get the contents of the heap file header page
-   getHeapHeader(fileId, buf, blockContent);
+   getHeapHeader(fileId, buf, header);
    // Return the address of the next page in the PageList list
    page->FD = fileId;
-   memcpy(&(page->pageId), blockContent + MAX_TABLENAME_SIZE + 2 * sizeof(int), sizeof(int));
+   memcpy(&(page->pageId), &(header->next_page), sizeof(int));
    return SUCCESS;
 }
-// TODO: memcpy needs to be updated when record description array is put into header
+
 int heapHeaderGetFreeSpace(fileDescriptor fileId, DiskAddress *page, Buffer *buf) {
-   char blockContent[BLOCKSIZE];
+   HeapFilerHeader *header;
    // Get the contents of the heap file header page
-   getHeapHeader(fileId, buf, blockContent);
+   getHeapHeader(fileId, buf, header);
    // Return the address of the next page in the PageList list
    page->FD = fileId;
-   memcpy(&(page->pageId), blockContent + MAX_TABLENAME_SIZE + 3 * sizeof(int), sizeof(int));
+   memcpy(&(page->pageId), &(header->freelist), sizeof(int));
    return SUCCESS;
 }

@@ -46,7 +46,7 @@ typedef struct page_header {
 int createHeapFile(Buffer *buf, char *tableName, tableDescription createTable);
 int deleteHeapFile(Buffer *buf, char *tableName);
 //File Header
-int getHeapHeader(fileDescriptor fileId, Buffer *buf, char *out);
+int getHeapHeader(fileDescriptor fileId, Buffer *buf, HeapFilerHeader *header);
 int heapHeaderGetTableName(fileDescriptor fileId, Buffer *buf, char *name);
 int heapHeaderGetRecordDesc(fileDescriptor fileId, char *bytes);
 int heapHeaderGetNextPage(fileDescriptor fileId, DiskAddress *page, Buffer *buf);

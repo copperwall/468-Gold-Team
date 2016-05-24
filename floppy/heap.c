@@ -256,15 +256,16 @@ int updateRecord(DiskAddress page, int recordId, char *record) {
    return ERROR;
 }
 
+// Loads the Heap File Header page into the buffer if not present, otherwise returns contents of that page 
 int getHeapHeader(fileDescriptor fileId, Buffer *buf, char *out) {
    DiskAddress diskPage;
    diskPage.FD = fileId;
    diskPage.pageId = 0;
    // If not in buffer
    if (pageExistsInBuffer(buf, diskPage) == ERROR) {
-      //if not in buffer, check in cache
+      // If not in buffer, check in cache
       if (pageExistsInCache(buf, diskPage) == ERROR) {
-         //if not in chache, read to buffer
+         // If not in chache, read to buffer
          readPage(buf, diskPage);
          getPage(buf, diskPage, out);
       } else {
@@ -278,8 +279,12 @@ int getHeapHeader(fileDescriptor fileId, Buffer *buf, char *out) {
    return SUCCESS;
 }
 
-int heapHeaderGetTableName(fileDescriptor fileId, char *name, char *heapHeaderPage) {
-   memcpy(name, heapHeaderPage, MAX_TABLENAME_SIZE);
+int heapHeaderGetTableName(fileDescriptor fileId, Buffer *buf, char *name) {
+   char blockContent[BLOCKSIZE];
+   //get the contents of the heap file header page
+   getHeapHeader(fileId, buf, blockContent);
+   //Load the tablename into *name
+   memcpy(name, blockContent, MAX_TABLENAME_SIZE);
    return SUCCESS;
 }
 
@@ -288,12 +293,22 @@ int heapHeaderGetRecordDesc(fileDescriptor fileId, char *bytes) {
    return ERROR;
 }
 
-int heapHeaderGetNextPage(fileDescriptor fileId, DiskAddress *page) {
-   //Return the address of the next page in the PageList list
-   return ERROR;
+int heapHeaderGetNextPage(fileDescriptor fileId, DiskAddress *page, Buffer *buf) {
+   char blockContent[BLOCKSIZE];
+   // Get the contents of the heap file header page
+   getHeapHeader(fileId, buf, blockContent);
+   // Return the address of the next page in the PageList list
+   page->FD = fileId;
+   memcpy(&(page->pageId), blockContent + MAX_TABLENAME_SIZE + 2 * sizeof(int), sizeof(int));
+   return SUCCESS;
 }
 
-int heapHeaderGetFreeSpace(fileDescriptor fileId, DiskAddress *page) {
-   //Return the address of the next page in the FreeSpace list
+int heapHeaderGetFreeSpace(fileDescriptor fileId, DiskAddress *page, Buffer *buf) {
+   char blockContent[BLOCKSIZE];
+   // Get the contents of the heap file header page
+   getHeapHeader(fileId, buf, blockContent);
+   // Return the address of the next page in the PageList list
+   page->FD = fileId;
+   memcpy(&(page->pageId), blockContent + MAX_TABLENAME_SIZE + 3 * sizeof(int), sizeof(int));
    return ERROR;
 }

@@ -47,10 +47,10 @@ int createHeapFile(Buffer *buf, char *tableName, tableDescription createTable);
 int deleteHeapFile(Buffer *buf, char *tableName);
 //File Header
 int getHeapHeader(fileDescriptor fileId, Buffer *buf, char *out);
-int heapHeaderGetTableName(fileDescriptor fileId, char *name, char *heapHeaderPage);
+int heapHeaderGetTableName(fileDescriptor fileId, Buffer *buf, char *name);
 int heapHeaderGetRecordDesc(fileDescriptor fileId, char *bytes);
-int heapHeaderGetNextPage(fileDescriptor fileId, DiskAddress *page);
-int heapHeaderGetFreeSpace(fileDescriptor fileId, DiskAddress *page);
+int heapHeaderGetNextPage(fileDescriptor fileId, DiskAddress *page, Buffer *buf);
+int heapHeaderGetFreeSpace(fileDescriptor fileId, DiskAddress *page, Buffer *buf);
 //CRUD
 int generateRecordDescription(tableDescription table, char *record, int *recordSize);
 int insertRecord(char * tableName, char * record, DiskAddress * location);

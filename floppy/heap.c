@@ -255,3 +255,45 @@ int updateRecord(DiskAddress page, int recordId, char *record) {
    // updated record.
    return ERROR;
 }
+
+int getHeapHeader(fileDescriptor fileId, Buffer *buf, char *out) {
+   DiskAddress diskPage;
+   diskPage.FD = fileId;
+   diskPage.pageId = 0;
+   // If not in buffer
+   if (pageExistsInBuffer(buf, diskPage) == ERROR) {
+      //if not in buffer, check in cache
+      if (pageExistsInCache(buf, diskPage) == ERROR) {
+         //if not in chache, read to buffer
+         readPage(buf, diskPage);
+         getPage(buf, diskPage, out);
+      } else {
+         // If in cache, get page from cache
+         getVolatilePage(buf, diskPage, out);
+      }
+   } else {
+      // If in Buffer, read from Buffer
+      getPage(buf, diskPage, out);
+   }
+   return SUCCESS;
+}
+
+int heapHeaderGetTableName(fileDescriptor fileId, char *name, char *heapHeaderPage) {
+   memcpy(name, heapHeaderPage, MAX_TABLENAME_SIZE);
+   return SUCCESS;
+}
+
+int heapHeaderGetRecordDesc(fileDescriptor fileId, char *bytes) {
+   //Get the record descriptor structure
+   return ERROR;
+}
+
+int heapHeaderGetNextPage(fileDescriptor fileId, DiskAddress *page) {
+   //Return the address of the next page in the PageList list
+   return ERROR;
+}
+
+int heapHeaderGetFreeSpace(fileDescriptor fileId, DiskAddress *page) {
+   //Return the address of the next page in the FreeSpace list
+   return ERROR;
+}

@@ -283,12 +283,27 @@ int getHeapHeader(fileDescriptor fileId, Buffer *buf, HeapFilerHeader *header) {
 }
 
 int heapHeaderGetTableName(fileDescriptor fileId, Buffer *buf, char *name) {
-   HeapFilerHeader *header;
+   HeapFilerHeader header;
    //get the contents of the heap file header page
-   getHeapHeader(fileId, buf, header);
+   getHeapHeader(fileId, buf, &header);
    //Load the tablename into *name
-   memcpy(name, header->table_name, MAX_TABLENAME_SIZE);
+   memcpy(name, header.table_name, MAX_TABLENAME_SIZE);
    return SUCCESS;
+}
+
+int heapHeaderSetTableName(fileDescriptor fileId, Buffer *buf, char *name) {
+   HeapFilerHeader header;
+   char out[BLOCKSIZE];
+   DiskAddress diskPage;
+   diskPage.FD = fileId;
+   diskPage.pageId = 0;
+   // Get the contents of the heap file header page
+   getHeapFileHeader(fileId, buf, &header);
+   // Set the table name
+   memcpy(header.table_name, name, MAX_TABLENAME_SIZE);
+   memcpy(out, &header, sizeof(HeapFilerHeader));
+   // Write changes back to disk
+   putPage(buf, diskPage, out, BLOCKSIZE);
 }
 
 int heapHeaderGetRecordDesc(fileDescriptor fileId, char *bytes) {
@@ -297,21 +312,21 @@ int heapHeaderGetRecordDesc(fileDescriptor fileId, char *bytes) {
 }
 
 int heapHeaderGetNextPage(fileDescriptor fileId, DiskAddress *page, Buffer *buf) {
-   HeapFilerHeader *header;
+   HeapFilerHeader header;
    // Get the contents of the heap file header page
-   getHeapHeader(fileId, buf, header);
+   getHeapHeader(fileId, buf, &header);
    // Return the address of the next page in the PageList list
    page->FD = fileId;
-   memcpy(&(page->pageId), &(header->next_page), sizeof(int));
+   memcpy(&(page->pageId), &(header.next_page), sizeof(int));
    return SUCCESS;
 }
 
 int heapHeaderGetFreeSpace(fileDescriptor fileId, DiskAddress *page, Buffer *buf) {
-   HeapFilerHeader *header;
+   HeapFilerHeader header;
    // Get the contents of the heap file header page
-   getHeapHeader(fileId, buf, header);
+   getHeapHeader(fileId, buf, &header);
    // Return the address of the next page in the PageList list
    page->FD = fileId;
-   memcpy(&(page->pageId), &(header->freelist), sizeof(int));
+   memcpy(&(page->pageId), &(header.freelist), sizeof(int));
    return SUCCESS;
 }

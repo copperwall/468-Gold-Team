@@ -49,6 +49,7 @@ int deleteHeapFile(Buffer *buf, char *tableName);
 int getHeapHeader(fileDescriptor fileId, Buffer *buf, HeapFilerHeader *header);
 int heapHeaderGetTableName(fileDescriptor fileId, Buffer *buf, char *name);
 int heapHeaderGetRecordDesc(fileDescriptor fileId, char *bytes);
+int heapHeaderSetTableName(fileDescriptor fileId, Buffer *buf, char *name);
 int heapHeaderGetNextPage(fileDescriptor fileId, DiskAddress *page, Buffer *buf);
 int heapHeaderGetFreeSpace(fileDescriptor fileId, DiskAddress *page, Buffer *buf);
 //CRUD

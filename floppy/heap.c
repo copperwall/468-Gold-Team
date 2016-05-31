@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <string.h>
 #include "floppy.h"
 #include "bufman.h"
@@ -5,6 +6,60 @@
 #include "tables.h"
 #include "heap.h"
 
+void printRecordDesc(char *recordDesc, int size) {
+   int i = 0;
+   int bytesRead = 0;
+   uint8_t type;
+   uint8_t varcharLen;
+   char *recordHead = recordDesc;
+   char attribute[MAX_TABLENAME_SIZE];
+
+   while (i < size) {
+      // Read attribute 
+      strcpy(attribute, recordHead);
+      bytesRead = strlen(attribute);
+      recordHead += bytesRead + 1;
+      i += bytesRead + 1;
+      printf("Attribute: %s\n", attribute);
+
+      memcpy(&type, recordHead, sizeof(uint8_t));
+      recordHead++;
+      i++;
+
+      switch (type) {
+         case INT:
+            printf("INT\n");
+            break;
+         case DATETIME:
+            printf("DATETIME\n");
+            break;
+         case BOOLEAN:
+            printf("BOOLEAN\n");
+            break;
+         case VARCHAR:
+            printf("VARCHAR ");
+            memcpy(&varcharLen, recordHead, sizeof(uint8_t));
+            recordHead++;
+            i++;
+            printf("Length: %d\n", varcharLen);
+            break;
+         case FLOAT:
+            printf("FLOAT\n");
+            break;
+         case PADDING:
+            printf("PADDING\n");
+            memcpy(&varcharLen, recordHead, sizeof(uint8_t));
+            recordHead++;
+            i++;
+            printf("Length: %d\n", varcharLen);
+            break;
+         default:
+            printf("Unknown type\n");
+      }
+   }
+
+   printf("Done\n");
+}
 // Heap File Stuff goes here
 
 ////////////////////////////
@@ -42,6 +97,13 @@ int createHeapFile(Buffer *buf, char *tableName, tableDescription createTable) {
    fileHeader.record_desc_size = generateRecordDescription(createTable, recordDescription, &recordSize);
    fileHeader.record_size = recordSize;
 
+#ifdef DEBUG
+   printf("DEBUG: record desc size %d\n", fileHeader.record_desc_size);
+   printf("DEBUG: record size %d\n", fileHeader.record_size);
+
+   printRecordDesc(recordDescription, fileHeader.record_desc_size);
+#endif
+
    // Have a page buffer and fill it first with the static part of the file
    // header.
    //
@@ -50,6 +112,7 @@ int createHeapFile(Buffer *buf, char *tableName, tableDescription createTable) {
    memcpy(headerPage + sizeof(HeapFilerHeader), recordDescription, fileHeader.record_desc_size);
 
    // Open new file with the table name
+   printf("Opening file with name %s\n", createTable.tableName);
    diskPage.FD = tfs_openFile(createTable.tableName);
    diskPage.pageId = 0;
 
@@ -148,7 +211,7 @@ int generateRecordDescription(tableDescription table, char *record, int *recordS
    Attribute *current = table.attributeList;
    char *record_head = record;
    int bytes_copied = 0;
-   int record_size = 0;
+    *recordSize = 0;
    // The number of bytes needed for padding.
    uint8_t padding;
 
@@ -163,21 +226,23 @@ int generateRecordDescription(tableDescription table, char *record, int *recordS
          case BOOLEAN:
          case VARCHAR:
             // Make sure the record_size is divisible by four
-            if (record_size % 4 != 0) {
-               padding = 4 - (record_size % 4);
+            if (*recordSize % 4 != 0) {
+               padding = 4 - (*recordSize % 4);
+               memset(record_head++, 0, 1);
                memset(record_head++, PADDING, 1);
                memcpy(record_head++, &padding, sizeof(uint8_t));
-               record_size += padding;
+               *recordSize += padding;
+               bytes_copied += 3;
             }
 
             break;
          case FLOAT:
             // Make sure the record_size is divisible by eight
-            if (record_size % 8 != 0) {
-               padding = 8 - (record_size % 8);
+            if (*recordSize % 8 != 0) {
+               padding = 8 - (*recordSize % 8);
                memset(record_head++, PADDING, 1);
                memcpy(record_head++, &padding, sizeof(uint8_t));
-               record_size += padding;
+               *recordSize += padding;
             }
 
             break;
@@ -209,20 +274,22 @@ int generateRecordDescription(tableDescription table, char *record, int *recordS
          case INT:
          case DATETIME:
          case BOOLEAN:
-            record_size += 4;
+            *recordSize += 4;
             break;
          case FLOAT:
-            record_size += 8;
+            *recordSize += 8;
             break;
          case VARCHAR:
             // Need to read the next byte to get the variable size of the
             // varchar.
-            record_size += current->attSize;
+            *recordSize += current->attSize + 1;
             break;
          default:
             // Problem! The type did not match any known type.
             return ERROR;
       }
+
+      current = current->next;
    }
 
    return bytes_copied;
@@ -256,7 +323,7 @@ int updateRecord(DiskAddress page, int recordId, char *record) {
    return ERROR;
 }
 
-// Loads the Heap File Header page into the buffer if not present, otherwise returns contents of that page 
+// Loads the Heap File Header page into the buffer if not present, otherwise returns contents of that page
 int getHeapHeader(fileDescriptor fileId, Buffer *buf, HeapFilerHeader *header) {
    char out[BLOCKSIZE];
    DiskAddress diskPage;
@@ -298,7 +365,7 @@ int heapHeaderSetTableName(fileDescriptor fileId, Buffer *buf, char *name) {
    diskPage.FD = fileId;
    diskPage.pageId = 0;
    // Get the contents of the heap file header page
-   getHeapFileHeader(fileId, buf, &header);
+   getHeapHeader(fileId, buf, &header);
    // Set the table name
    memcpy(header.table_name, name, MAX_TABLENAME_SIZE);
    memcpy(out, &header, sizeof(HeapFilerHeader));

@@ -15,5 +15,7 @@ bufman: bufman.c bufman.h libTinyFS.h tinyFS.h libDisk.o libTinyFS.o
 	$(CC) $(CFLAGS) bufman.c bufman.h tinyFS.h libTinyFS.h libDisk.o libTinyFS.o
 harness: bufman.c bufman.h libTinyFS.h tinyFS.h libDisk.o libTinyFS.o bufferTest.c
 	$(CC) $(CFLAGS) -o harness bufman.c bufman.h tinyFS.h libTinyFS.h libDisk.o libTinyFS.o bufferTest.c
+heaptest:
+	$(CC) $(CFLAGS) -o heaptest -DDEBUG bufman.c libDisk.o libTinyFS.o readwrite.c heap.c heap_test.c
 clean:
 	rm -f bufman harness

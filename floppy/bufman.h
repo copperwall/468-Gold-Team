@@ -30,7 +30,6 @@ typedef struct { /* Main Memory Buffer */
    char pin[MAX_BUFFER_SIZE]; /* Pinned Page flags */
    char dirty[MAX_BUFFER_SIZE]; /* Dirty Page flags */
    int numBufferOccupied; /* Number of occupied persistent buffer slots */
-   int numCacheOccupied; /* Number of occupied volatile buffer slots */
    tableDescription *tables; /* Linked list of table descriptions */
 } Buffer;
 

@@ -15,7 +15,7 @@ void printRecordDesc(char *recordDesc, int size) {
    char attribute[MAX_TABLENAME_SIZE];
 
    while (i < size) {
-      // Read attribute 
+      // Read attribute
       strcpy(attribute, recordHead);
       bytesRead = strlen(attribute);
       recordHead += bytesRead + 1;

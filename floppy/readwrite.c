@@ -60,9 +60,9 @@ int putPage(Buffer *buf, DiskAddress page, char *data, int dataSize) {
 
    if ((index = getCacheIndex(buf, page)) == ERROR) {
       if ((index = getBufferIndex(buf, page)) == ERROR) {
-         // TODO: Make new page
-         // UNIMPLEMENTED
-         return ERROR;
+         // load page into buffer and then put page there
+         readPage(buf, page);
+         index = getBufferIndex(buf, page);
       }
 
       memcpy(buf->pages[index].block, data, BLOCKSIZE);

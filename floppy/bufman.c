@@ -18,8 +18,6 @@ int commence(char *database, Buffer *buf, int nBufferBlocks, int nCacheBlocks) {
    buf->database = strdup(database);
    buf->nBufferBlocks = nBufferBlocks;
    buf->nCacheBlocks = nCacheBlocks;
-   buf->numBufferOccupied = 0;
-   buf->numCacheOccupied = 0;
 
    // Initialize all buffer and cache slots to be available.
    int i;
@@ -113,12 +111,6 @@ int newPage(Buffer *buf, fileDescriptor FD, DiskAddress * diskPage) {
    // Check to see if any pages can be allocated in the buffer.
    chkerr(newBufferIndex = getLRUPage(buf));
 
-   // If the buffer size is less than the maximum size, increment numBufferOccupied
-   // to for the new block about to be filled.
-   if (buf->numBufferOccupied < MAX_BUFFER_SIZE) {
-      ++buf->numBufferOccupied;
-   }
-
    // If the lru block is dirty, flush it, otherwise just clobber it.
    if (buf->dirty[newBufferIndex]) {
       flushPage(buf, buf->pages[newBufferIndex].diskPage);
@@ -146,12 +138,15 @@ int getLRUPage(Buffer *buf) {
    int i, replaceIndex;
    long minTimestamp = ULONG_MAX;
 
-   // If the buffer is not full, return the next empty slot.
-   if (buf->numBufferOccupied < MAX_BUFFER_SIZE) {
-      return buf->numBufferOccupied;
+   // Look for available pages first.
+   for (i = 0; i < buf->nBufferBlocks; i++) {
+      if (buf->pages[i].isAvailable) {
+         return i;
+      }
    }
 
-   for (i = 0; i < buf->numBufferOccupied; i++) {
+   // If no available, grab the lowest timestamp page.
+   for (i = 0; i < buf->nBufferBlocks; i++) {
       if (buf->pin[i] == 0 && buf->timestamp[i] < minTimestamp) {
          minTimestamp = buf->timestamp[i];
          replaceIndex = i;
@@ -169,23 +164,18 @@ int getLRUPage(Buffer *buf) {
 //Loads a page into the buffer, replacing another if necessary.
 //IMPORTANT: after all pages are filled
 //initially, no page is ever removed from the buffer.  Pages
-//are simply swapped out if necessary.  This means numBufferOccupied
-//should NEVER be decremented.
+//are simply swapped out if necessary.
 int loadPage(Buffer *buf, DiskAddress diskPage) {
    int victimPage;
-   if(buf->numBufferOccupied < buf->nBufferBlocks){
-      tfs_readPage(diskPage.FD, diskPage.pageId,
-            buf->pages[buf->numBufferOccupied++].block);
 
-   } else {
-      chkerr(victimPage = getLRUPage(buf));
-      if (buf->dirty[victimPage]) {
-         chkerr(flushPage(buf, buf->pages[victimPage].diskPage));
-      }
-
-      tfs_readPage(diskPage.FD, diskPage.pageId,
-         buf->pages[victimPage].block);
+   chkerr(victimPage = getLRUPage(buf));
+   if (buf->dirty[victimPage]) {
+      chkerr(flushPage(buf, buf->pages[victimPage].diskPage));
    }
+
+   tfs_readPage(diskPage.FD, diskPage.pageId,
+      buf->pages[victimPage].block);
+   buf->pages[victimPage].isAvailable = 0;
    touchBlock(buf, diskPage);
    return SUCCESS;
 }
@@ -194,7 +184,7 @@ int loadPage(Buffer *buf, DiskAddress diskPage) {
 int pageExistsInBuffer(Buffer *buf, DiskAddress diskPage) {
    int ndx;
 
-   for (ndx = 0; ndx < buf->numBufferOccupied; ndx++) {
+   for (ndx = 0; ndx < buf->nBufferBlocks; ndx++) {
       if ((buf->pages[ndx].diskPage.FD == diskPage.FD) && (buf->pages[ndx].diskPage.pageId == diskPage.pageId)) {
          return SUCCESS;
       }
@@ -218,13 +208,15 @@ int pageExistsInCache(Buffer *buf, DiskAddress diskPage) {
 
 //returns the index of the page in the buffer
 //returns an error code if the page does not exist in buffer
-// TODO: Make sure to look at pages that are actually occupied.
 int getBufferIndex(Buffer *buf, DiskAddress diskPage) {
-   int ndx = 0;
+   int ndx;
 
-   for (ndx; ndx < MAX_BUFFER_SIZE; ndx++) {
-      if (buf->pages[ndx].diskPage.FD == diskPage.FD && buf->pages[ndx].diskPage.pageId == diskPage.pageId) {
-         return ndx;
+   for (ndx = 0; ndx < buf->nBufferBlocks; ndx++) {
+      if (buf->pages[ndx].isAvailable) {
+         if (buf->pages[ndx].diskPage.FD == diskPage.FD
+          && buf->pages[ndx].diskPage.pageId == diskPage.pageId) {
+            return ndx;
+         }
       }
    }
 
@@ -233,14 +225,13 @@ int getBufferIndex(Buffer *buf, DiskAddress diskPage) {
 
 //returns the index of the page in the cache
 //returns an error code if the page does not exist in cache
-//
-// TODO: Only look at pages that are actually occupied.
 int getCacheIndex(Buffer *buf, DiskAddress diskPage) {
-   int ndx = 0;
+   int ndx;
 
-   for (ndx; ndx < MAX_BUFFER_SIZE; ndx++) {
+   for (ndx = 0; ndx < buf->nCacheBlocks; ndx++) {
       if (buf->cache[ndx].isAvailable) {
-         if (buf->cache[ndx].diskPage.FD == diskPage.FD && buf->cache[ndx].diskPage.pageId == diskPage.pageId) {
+         if (buf->cache[ndx].diskPage.FD == diskPage.FD
+          && buf->cache[ndx].diskPage.pageId == diskPage.pageId) {
             return ndx;
          }
       }
@@ -258,7 +249,7 @@ int getCacheIndexFromBuffer(Buffer *buf, DiskAddress diskPage) {
    int ndx;
    Block *current;
 
-   for (ndx = 0; ndx < buf->numBufferOccupied; ndx++) {
+   for (ndx = 0; ndx < buf->nBufferBlocks; ndx++) {
       current = &(buf->pages[ndx]);
       if (current->isVolatile && !current->isAvailable) {
          if (current->diskPage.FD == diskPage.FD && current->diskPage.pageId == diskPage.pageId) {
@@ -282,17 +273,23 @@ int touchBlock(Buffer *buf, DiskAddress diskPage) {
 
 // print general information about current buffer
 void checkpoint(Buffer *buf) {
-   int i = 0;
+   int i, slotsOccupied = 0;
+
    printf("Disk: %s\n", buf->database);
-   printf("Slots occupied: %d\n", buf->numBufferOccupied);
-   for (i = 0; i < buf->numBufferOccupied; i++) {
+   for (i = 0; i < buf->nBufferBlocks; i++) {
+      if (!buf->pages[i].isAvailable) {
+         continue;
+      }
+
       printf("Buffer Slot %d\n", i);
       printf("\tFD: %d\n", (buf->pages[i]).diskPage.FD);
       printf("\tPageid: %d\n", (buf->pages[i]).diskPage.pageId);
       printf("\tTimestamp: %ld\n", buf->timestamp[i]);
       printf("\tPin: %d\n", buf->pin[i]);
       printf("\tDirty page: %d\n\n", buf->dirty[i]);
+      slotsOccupied++;
    }
+   printf("Slots occupied: %d\n", slotsOccupied);
 }
 
 // print contents of page at the index of buffer
@@ -406,7 +403,7 @@ int allocateCachePage(Buffer *buf, DiskAddress diskPage) {
  * Mark it as available, zero out its things.
  */
 
-// TODO: Does this search the buffer? No
+// TODO: Does this search the buffer? No. It should
 // TODO: Make a function that searches non-volatile storage
 int removeCachePage(Buffer *buf, DiskAddress diskPage) {
    int index;
@@ -428,11 +425,6 @@ int removeCachePage(Buffer *buf, DiskAddress diskPage) {
    // zero out the block and diskpage, too.
    memset(&(buf->cache[index].diskPage), 0, sizeof(DiskAddress));
    memset(&(buf->cache[index].block), 0, BLOCKSIZE);
-
-   // TODO: If we do this we can't use numCacheOccupied like we used
-   // numBufferOccupied. numCacheOccupied will not signify the end of available
-   // volatile slots.
-   buf->numCacheOccupied--;
 
    return SUCCESS;
 }

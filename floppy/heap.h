@@ -9,7 +9,7 @@ typedef struct heap_file_header {
    // The number of bytes the record description is.
    int record_desc_size;
    // The number of bytes in a record
-   int record_size;                                      
+   int record_size;
    // The first data pageid of the file
    int next_page;
    // The pageid of the first page with free record spaces.
@@ -21,13 +21,13 @@ typedef struct heap_file_header {
 
 typedef struct page_header {
    // The filename that this belongs to.
-   char filename[MAX_TABLENAME_SIZE]; 
+   char filename[MAX_TABLENAME_SIZE];
    // The tinyFS pageid that this is.
-   int pageid;                      
+   int pageid;
    // This should be determined dynamically.
-   int max_records;                 
+   int max_records;
    // Number of record slots used.
-   int num_occupied;                
+   int num_occupied;
    // Timestamp for when the page is first created.
    int create_timestamp;
    // Timestamp for when the page was last flushed to disk.
@@ -46,14 +46,14 @@ typedef struct page_header {
 int createHeapFile(Buffer *buf, char *tableName, tableDescription createTable);
 int deleteHeapFile(Buffer *buf, char *tableName);
 //File Header
-int getHeapHeader(fileDescriptor fileId, Buffer *buf, HeapFilerHeader *header);
+int getHeapHeader(fileDescriptor fileId, Buffer *buf, void *header);
 int heapHeaderGetTableName(fileDescriptor fileId, Buffer *buf, char *name);
-int heapHeaderGetRecordDesc(fileDescriptor fileId, char *bytes);
+int heapHeaderGetRecordDesc(fileDescriptor fileId, Buffer *buf, char *bytes);
 int heapHeaderSetTableName(fileDescriptor fileId, Buffer *buf, char *name);
-int heapHeaderGetNextPage(fileDescriptor fileId, DiskAddress *page, Buffer *buf);
-int heapHeaderGetFreeSpace(fileDescriptor fileId, DiskAddress *page, Buffer *buf);
+int heapHeaderGetNextPage(fileDescriptor fileId, DiskAddress *diskPage, Buffer *buf);
+int heapHeaderGetFreeSpace(fileDescriptor fileId, DiskAddress *diskPage, Buffer *buf);
 //CRUD
 int generateRecordDescription(tableDescription table, char *record, int *recordSize);
 int insertRecord(char * tableName, char * record, DiskAddress * location);
-int deleteRecord(DiskAddress page, int recordId);
-int updateRecord(DiskAddress page, int recordId, char *record);
+int deleteRecord(DiskAddress diskPage, int recordId);
+int updateRecord(DiskAddress diskPage, int recordId, char *record);

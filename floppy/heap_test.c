@@ -33,10 +33,17 @@ void testSingleAttribute() {
    firstColumn.next = NULL;
 
    Buffer *buf = calloc(1, sizeof(Buffer));
+   commence("yo.dsk", buf, MAX_BUFFER_SIZE, MAX_BUFFER_SIZE);
    createHeapFile(buf, test.tableName, test);
 
+   char tableName[MAX_TABLENAME_SIZE];
+   // At this point, the header should be in the buffer
+   heapHeaderGetTableName(0, buf, tableName);
+   printf("Table name from header page is %s\n", tableName);
+   heapHeaderSetTableName(0, buf, "lols");
+   heapHeaderGetTableName(0, buf, tableName);
+   printf("Table name from header page after set is %s\n", tableName);
    tfs_unmount();
-
 }
 
 void testDoubleAttribute() {
@@ -66,6 +73,7 @@ void testDoubleAttribute() {
    secondColumn.next = NULL;
 
    Buffer *buf = calloc(1, sizeof(Buffer));
+   commence("yo.dsk", buf, MAX_BUFFER_SIZE, MAX_BUFFER_SIZE);
    createHeapFile(buf, test.tableName, test);
 
    tfs_unmount();
@@ -95,6 +103,7 @@ void testStringAttribute() {
    secondColumn.next = NULL;
 
    Buffer *buf = calloc(1, sizeof(Buffer));
+   commence("yo.dsk", buf, MAX_BUFFER_SIZE, MAX_BUFFER_SIZE);
    createHeapFile(buf, test.tableName, test);
 
    tfs_unmount();

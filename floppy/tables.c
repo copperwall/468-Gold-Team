@@ -75,3 +75,15 @@ int createVolatileTable(Buffer *buf, tableDescription table) {
    chkerr(createHeapFile(buf, table.tableName, table));
    return SUCCESS;
 }
+
+int getFileDescriptorForTable(Buffer *buf, char *name) {
+   tableDescription *tables = buf->tables;
+
+   while (tables != NULL) {
+      if (!strcmp(tables->tableName, name)) {
+         return tables->fd;
+      }
+   }
+
+   return ERROR;
+}

@@ -433,3 +433,67 @@ int heapHeaderGetFreeSpace(fileDescriptor fileId, DiskAddress *diskPage, Buffer 
    memcpy(&(diskPage->pageId), &(header->freelist), sizeof(int));
    return SUCCESS;
 }
+
+/////////////////////////////
+// Page level operations
+/////////////////////////////
+
+int pHGetRecSize(Buffer *buf, DiskAddress diskPage) {
+   char page[BLOCKSIZE];
+   PageHeader *header;
+
+   getPage(buf, diskPage, page);
+   header = (PageHeader *)page;
+
+   return header->record_size;
+}
+
+int pHGetMaxRecords(Buffer *buf, DiskAddress diskPage) {
+   char page[BLOCKSIZE];
+   PageHeader *header;
+
+   getPage(buf, diskPage, page);
+   header = (PageHeader *)page;
+
+   return header->max_records;
+}
+
+int pHGetNumRecords(Buffer *buf, DiskAddress diskPage) {
+   char page[BLOCKSIZE];
+   PageHeader *header;
+
+   getPage(buf, diskPage, page);
+   header = (PageHeader *)page;
+
+   return header->num_occupied;
+}
+
+int pHGetBitmap(Buffer *buf, DiskAddress diskPage) {
+   char page[BLOCKSIZE];
+   PageHeader *header;
+
+   getPage(buf, diskPage, page);
+   header = (PageHeader *)page;
+
+   // TODO: This
+}
+
+int pHGetNextPage(Buffer *buf, DiskAddress diskPage) {
+   char page[BLOCKSIZE];
+   PageHeader *header;
+
+   getPage(buf, diskPage, page);
+   header = (PageHeader *)page;
+
+   return header->next_page;
+}
+
+int pHGetNextFree(Buffer *buf, DiskAddress diskPage) {
+   char page[BLOCKSIZE];
+   PageHeader *header;
+
+   getPage(buf, diskPage, page);
+   header = (PageHeader *)page;
+
+   return header->freelist;
+}

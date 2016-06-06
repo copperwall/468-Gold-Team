@@ -5,7 +5,6 @@
 typedef struct heap_file_header {
    // Table name
    char table_name[MAX_TABLENAME_SIZE];
-   // TODO: Record description as another char array
    // The number of bytes the record description is.
    int record_desc_size;
    // The number of bytes in a record
@@ -15,15 +14,16 @@ typedef struct heap_file_header {
    // The pageid of the first page with free record spaces.
    int freelist;
 
-   // Could just add a buffer with an arbitrary number of spaces incase we
-   // want to expand later.
 } HeapFilerHeader;
 
 typedef struct page_header {
    // The filename that this belongs to.
+   // NOTE: I think tinyfs puts its own limits on filename size
    char filename[MAX_TABLENAME_SIZE];
    // The tinyFS pageid that this is.
    int pageid;
+   // The size of the record
+   int record_size;
    // This should be determined dynamically.
    int max_records;
    // Number of record slots used.
@@ -52,6 +52,13 @@ int heapHeaderGetRecordDesc(fileDescriptor fileId, Buffer *buf, char *bytes);
 int heapHeaderSetTableName(fileDescriptor fileId, Buffer *buf, char *name);
 int heapHeaderGetNextPage(fileDescriptor fileId, DiskAddress *diskPage, Buffer *buf);
 int heapHeaderGetFreeSpace(fileDescriptor fileId, DiskAddress *diskPage, Buffer *buf);
+// Data Page
+int pHGetRecSize(Buffer *buf, DiskAddress page);
+int pHGetMaxRecords(Buffer *buf, DiskAddress page);
+int pHGetNumRecords(Buffer *buf, DiskAddress page);
+int pHGetBitmap(Buffer *buf, DiskAddress page);
+int pHGetNextPage(Buffer *buf, DiskAddress page);
+int pHGetNextFree(Buffer *buf, DiskAddress page);
 //CRUD
 int generateRecordDescription(tableDescription table, char *record, int *recordSize);
 int insertRecord(char * tableName, char * record, DiskAddress * location);

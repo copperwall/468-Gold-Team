@@ -448,6 +448,17 @@ int pHGetRecSize(Buffer *buf, DiskAddress diskPage) {
    return header->record_size;
 }
 
+int pHSetRecSize(Buffer *buf, DiskAddress diskPage, int recSize) {
+   char page[BLOCKSIZE];
+   PageHeader *header;
+
+   getPage(buf, diskPage, page);
+   header = (PageHeader *)page;
+
+   header->record_size = recSize;
+   putPage(buf, diskPage, page, BLOCKSIZE);
+}
+
 int pHGetMaxRecords(Buffer *buf, DiskAddress diskPage) {
    char page[BLOCKSIZE];
    PageHeader *header;
@@ -458,6 +469,17 @@ int pHGetMaxRecords(Buffer *buf, DiskAddress diskPage) {
    return header->max_records;
 }
 
+int pHSetMaxRecords(Buffer *buf, DiskAddress diskPage, int maxRecords) {
+   char page[BLOCKSIZE];
+   PageHeader *header;
+
+   getPage(buf, diskPage, page);
+   header = (PageHeader *)page;
+
+   header->max_records = maxRecords;
+   putPage(buf, diskPage, page, BLOCKSIZE);
+}
+
 int pHGetNumRecords(Buffer *buf, DiskAddress diskPage) {
    char page[BLOCKSIZE];
    PageHeader *header;
@@ -466,6 +488,17 @@ int pHGetNumRecords(Buffer *buf, DiskAddress diskPage) {
    header = (PageHeader *)page;
 
    return header->num_occupied;
+}
+
+int pHSetNumRecords(Buffer *buf, DiskAddress diskPage, int numRecords) {
+   char page[BLOCKSIZE];
+   PageHeader *header;
+
+   getPage(buf, diskPage, page);
+   header = (PageHeader *)page;
+
+   header->num_occupied = numRecords;
+   putPage(buf, diskPage, page, BLOCKSIZE);
 }
 
 int pHGetBitmap(Buffer *buf, DiskAddress diskPage) {
@@ -488,6 +521,59 @@ int pHGetNextPage(Buffer *buf, DiskAddress diskPage) {
    return header->next_page;
 }
 
+int pHGetCreateTimestamp(Buffer *buf, DiskAddress diskPage) {
+   char page[BLOCKSIZE];
+   PageHeader *header;
+
+   getPage(buf, diskPage, page);
+   header = (PageHeader *)page;
+
+   return header->create_timestamp;
+}
+
+int pHSetCreateTimestamp(Buffer *buf, DiskAddress diskPage, int timestamp) {
+   char page[BLOCKSIZE];
+   PageHeader *header;
+
+   getPage(buf, diskPage, page);
+   header = (PageHeader *)page;
+
+   header->create_timestamp = timestamp;
+   putPage(buf, diskPage, page, BLOCKSIZE);
+}
+
+int pHGetFlushTimestamp(Buffer *buf, DiskAddress diskPage) {
+   char page[BLOCKSIZE];
+   PageHeader *header;
+
+   getPage(buf, diskPage, page);
+   header = (PageHeader *)page;
+
+   return header->flush_timestamp;
+}
+
+int pHSetFlushTimestamp(Buffer *buf, DiskAddress diskPage, int timestamp) {
+   char page[BLOCKSIZE];
+   PageHeader *header;
+
+   getPage(buf, diskPage, page);
+   header = (PageHeader *)page;
+
+   header->flush_timestamp = timestamp;
+   putPage(buf, diskPage, page, BLOCKSIZE);
+}
+
+int pHSetNextPage(Buffer *buf, DiskAddress diskPage, int nextPage) {
+   char page[BLOCKSIZE];
+   PageHeader *header;
+
+   getPage(buf, diskPage, page);
+   header = (PageHeader *)page;
+
+   header->next_page = nextPage;
+   putPage(buf, diskPage, page, BLOCKSIZE);
+}
+
 int pHGetNextFree(Buffer *buf, DiskAddress diskPage) {
    char page[BLOCKSIZE];
    PageHeader *header;
@@ -496,4 +582,15 @@ int pHGetNextFree(Buffer *buf, DiskAddress diskPage) {
    header = (PageHeader *)page;
 
    return header->freelist;
+}
+
+int pHSetNextFree(Buffer *buf, DiskAddress diskPage, int nextFree) {
+   char page[BLOCKSIZE];
+   PageHeader *header;
+
+   getPage(buf, diskPage, page);
+   header = (PageHeader *)page;
+
+   header->freelist = nextFree;
+   putPage(buf, diskPage, page, BLOCKSIZE);
 }

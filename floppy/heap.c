@@ -438,6 +438,36 @@ int heapHeaderGetFreeSpace(fileDescriptor fileId, DiskAddress *diskPage, Buffer 
 // Page level operations
 /////////////////////////////
 
+int getRecord(Buffer *buf, DiskAddress diskPage, int recordId, char *bytes) {
+   // Get the page header from buffer
+   char page[BLOCKSIZE];
+   PageHeader *header;
+   int recordSize, offset;
+
+   getPage(buf, diskPage, page);
+   header = (PageHeader *)page;
+
+   recordSize = header->record_size;
+   offset = sizeof(PageHeader) + (recordSize * recordId);
+
+   memcpy(bytes, page + offset, recordSize);
+}
+
+int putRecord(Buffer *buf, DiskAddress diskPage, int recordId, char *bytes) {
+   // Get the page header from buffer
+   char page[BLOCKSIZE];
+   PageHeader *header;
+   int recordSize, offset;
+
+   getPage(buf, diskPage, page);
+   header = (PageHeader *)page;
+
+   recordSize = header->record_size;
+   offset = sizeof(PageHeader) + (recordSize * recordId);
+
+   memcpy(page + offset, bytes, recordSize);
+}
+
 int pHGetRecSize(Buffer *buf, DiskAddress diskPage) {
    char page[BLOCKSIZE];
    PageHeader *header;

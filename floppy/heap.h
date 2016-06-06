@@ -46,6 +46,7 @@ typedef struct page_header {
 // File Creation
 int createHeapFile(Buffer *buf, char *tableName, tableDescription createTable);
 int deleteHeapFile(Buffer *buf, char *tableName);
+
 //File Header
 int getHeapHeader(fileDescriptor fileId, Buffer *buf, void *header);
 int heapHeaderGetTableName(fileDescriptor fileId, Buffer *buf, char *name);
@@ -53,7 +54,12 @@ int heapHeaderGetRecordDesc(fileDescriptor fileId, Buffer *buf, char *bytes);
 int heapHeaderSetTableName(fileDescriptor fileId, Buffer *buf, char *name);
 int heapHeaderGetNextPage(fileDescriptor fileId, DiskAddress *diskPage, Buffer *buf);
 int heapHeaderGetFreeSpace(fileDescriptor fileId, DiskAddress *diskPage, Buffer *buf);
+
 // Data Page
+int getRecord(Buffer *buf, DiskAddress diskPage, int recordId, char *bytes);
+int putRecord(Buffer *buf, DiskAddress diskPage, int recordId, char *bytes);
+
+// Getters and Setters
 int pHGetRecSize(Buffer *buf, DiskAddress page);
 int pHSetRecSize(Buffer *buf, DiskAddress diskPage, int recSize);
 int pHGetMaxRecords(Buffer *buf, DiskAddress page);

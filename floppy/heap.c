@@ -367,18 +367,28 @@ int heapHeaderGetTableName(fileDescriptor fileId, Buffer *buf, char *name) {
 int heapHeaderSetTableName(fileDescriptor fileId, Buffer *buf, char *name) {
    HeapFilerHeader *header;
    char page[BLOCKSIZE];
+   char oldName[MAX_TABLENAME_SIZE];
    DiskAddress diskPage;
    diskPage.FD = fileId;
    diskPage.pageId = 0;
    // Get the contents of the heap file header page
    getHeapHeader(fileId, buf, page);
    header = (HeapFilerHeader *)page;
+
+   strcpy(oldName, header->table_name);
    // Set the table name
    memcpy(header->table_name, name, MAX_TABLENAME_SIZE);
    // Write changes back to disk
    putPage(buf, diskPage, page, BLOCKSIZE);
 
-   // TODO: Update the table name in the tables thing in Buffer
+   // Update the tables linked list in the buffer
+   tableDescription *tables = buf->tables;
+
+   while (tables != NULL) {
+      if (!strcmp(tables->tableName, oldName)) {
+         strcpy(tables->tableName, header->table_name);
+      }
+   }
 }
 
 /**

@@ -1,6 +1,7 @@
 // Heap File Stuff goes here
 
 #define MAX_TABLENAME_SIZE 50
+#define BITMAP_SIZE 128
 
 typedef struct heap_file_header {
    // Table name
@@ -37,9 +38,9 @@ typedef struct page_header {
    // Pageid for the first page in the freelist.
    int freelist;
    // Needs to be large enough to hold the number of records in a page.
-   // Maybe the bitmap should be at the end of the struct because it's dynamic.
-   // It makes de/serialization a little weird, but oh well
-   // TODO: bitmap
+   // By being 128, we can have a bit for every record with a record size of
+   // 4 bytes. We also don't have to do any of that dynamic bullshit.
+   char bitmap[BITMAP_SIZE];
 } PageHeader;
 
 // File Creation
@@ -54,11 +55,21 @@ int heapHeaderGetNextPage(fileDescriptor fileId, DiskAddress *diskPage, Buffer *
 int heapHeaderGetFreeSpace(fileDescriptor fileId, DiskAddress *diskPage, Buffer *buf);
 // Data Page
 int pHGetRecSize(Buffer *buf, DiskAddress page);
+int pHSetRecSize(Buffer *buf, DiskAddress diskPage, int recSize);
 int pHGetMaxRecords(Buffer *buf, DiskAddress page);
+int pHSetMaxRecords(Buffer *buf, DiskAddress diskPage, int maxRecords);
 int pHGetNumRecords(Buffer *buf, DiskAddress page);
-int pHGetBitmap(Buffer *buf, DiskAddress page);
+int pHSetNumRecords(Buffer *buf, DiskAddress diskPage, int numRecords);
+int pHGetBitmap(Buffer *buf, DiskAddress page, char *out);
+int pHSetBitmap(Buffer *buf, DiskAddress diskPage, char *bitmap);
+int pHGetCreateTimestamp(Buffer *buf, DiskAddress diskPage);
+int pHSetCreateTimestamp(Buffer *buf, DiskAddress diskPage, int timestamp);
+int pHGetFlushTimestamp(Buffer *buf, DiskAddress diskPage);
+int pHSetFlushTimestamp(Buffer *buf, DiskAddress diskPage, int timestamp);
 int pHGetNextPage(Buffer *buf, DiskAddress page);
+int pHSetNextPage(Buffer *buf, DiskAddress diskPage, int nextPage);
 int pHGetNextFree(Buffer *buf, DiskAddress page);
+int pHSetNextFree(Buffer *buf, DiskAddress diskPage, int nextFree);
 //CRUD
 int generateRecordDescription(tableDescription table, char *record, int *recordSize);
 int insertRecord(char * tableName, char * record, DiskAddress * location);

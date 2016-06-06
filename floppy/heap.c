@@ -501,14 +501,24 @@ int pHSetNumRecords(Buffer *buf, DiskAddress diskPage, int numRecords) {
    putPage(buf, diskPage, page, BLOCKSIZE);
 }
 
-int pHGetBitmap(Buffer *buf, DiskAddress diskPage) {
+int pHGetBitmap(Buffer *buf, DiskAddress diskPage, char *out) {
    char page[BLOCKSIZE];
    PageHeader *header;
 
    getPage(buf, diskPage, page);
    header = (PageHeader *)page;
 
-   // TODO: This
+   memcpy(out, header->bitmap, BITMAP_SIZE);
+}
+
+int pHSetBitmap(Buffer *buf, DiskAddress diskPage, char *bitmap) {
+   char page[BLOCKSIZE];
+   PageHeader *header;
+
+   getPage(buf, diskPage, page);
+   header = (PageHeader *)page;
+
+   memcpy(header->bitmap, bitmap, BITMAP_SIZE);
 }
 
 int pHGetNextPage(Buffer *buf, DiskAddress diskPage) {

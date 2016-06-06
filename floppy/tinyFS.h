@@ -1,5 +1,5 @@
 /* The default size of the disk and file system block */
-#define BLOCKSIZE 2048
+#define BLOCKSIZE 4096
 
 #define MAX_FILES 256
 

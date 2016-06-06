@@ -15,7 +15,7 @@ typedef struct heap_file_header {
    // The pageid of the first page with free record spaces.
    int freelist;
 
-} HeapFilerHeader;
+} HeapFileHeader;
 
 typedef struct page_header {
    // The filename that this belongs to.

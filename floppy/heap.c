@@ -84,7 +84,7 @@ int createHeapFile(Buffer *buf, char *tableName, tableDescription createTable) {
    // size of each record.
    //
    // We could also set pageid 1 as the next_page and freelist value.
-   HeapFilerHeader fileHeader;
+   HeapFileHeader fileHeader;
    DiskAddress diskPage;
    // TODO: Make a constant for the max recorddescription size.
    char recordDescription[2048];
@@ -108,8 +108,8 @@ int createHeapFile(Buffer *buf, char *tableName, tableDescription createTable) {
    // header.
    //
    // After that place the record description in it.
-   memcpy(headerPage, &fileHeader, sizeof(HeapFilerHeader));
-   memcpy(headerPage + sizeof(HeapFilerHeader), recordDescription, fileHeader.record_desc_size);
+   memcpy(headerPage, &fileHeader, sizeof(HeapFileHeader));
+   memcpy(headerPage + sizeof(HeapFileHeader), recordDescription, fileHeader.record_desc_size);
 
    // Open new file with the table name
    printf("Opening file with name %s\n", createTable.tableName);
@@ -354,18 +354,18 @@ int getHeapHeader(fileDescriptor fileId, Buffer *buf, void *header) {
 }
 
 int heapHeaderGetTableName(fileDescriptor fileId, Buffer *buf, char *name) {
-   HeapFilerHeader *header;
+   HeapFileHeader *header;
    char page[BLOCKSIZE];
    //get the contents of the heap file header page
    getHeapHeader(fileId, buf, page);
-   header = (HeapFilerHeader *)page;
+   header = (HeapFileHeader *)page;
    //Load the tablename into *name
    memcpy(name, header->table_name, MAX_TABLENAME_SIZE);
    return SUCCESS;
 }
 
 int heapHeaderSetTableName(fileDescriptor fileId, Buffer *buf, char *name) {
-   HeapFilerHeader *header;
+   HeapFileHeader *header;
    char page[BLOCKSIZE];
    char oldName[MAX_TABLENAME_SIZE];
    DiskAddress diskPage;
@@ -373,7 +373,7 @@ int heapHeaderSetTableName(fileDescriptor fileId, Buffer *buf, char *name) {
    diskPage.pageId = 0;
    // Get the contents of the heap file header page
    getHeapHeader(fileId, buf, page);
-   header = (HeapFilerHeader *)page;
+   header = (HeapFileHeader *)page;
 
    strcpy(oldName, header->table_name);
    // Set the table name
@@ -394,28 +394,28 @@ int heapHeaderSetTableName(fileDescriptor fileId, Buffer *buf, char *name) {
 /**
  * Grab the header, get the record desc size
  *
- * memcpy [sizeof(HeapFilerHeader), record desc size] of page
+ * memcpy [sizeof(HeapFileHeader), record desc size] of page
  */
 int heapHeaderGetRecordDesc(fileDescriptor fileId, Buffer *buf, char *bytes) {
    char page[BLOCKSIZE];
-   HeapFilerHeader *header;
+   HeapFileHeader *header;
    int recordDescSize;
 
    getHeapHeader(fileId, buf, page);
-   header = (HeapFilerHeader *)page;
+   header = (HeapFileHeader *)page;
    recordDescSize = header->record_desc_size;
 
-   memcpy(bytes, page + sizeof(HeapFilerHeader), recordDescSize);
+   memcpy(bytes, page + sizeof(HeapFileHeader), recordDescSize);
    //Get the record descriptor structure
    return SUCCESS;
 }
 
 int heapHeaderGetNextPage(fileDescriptor fileId, DiskAddress *diskPage, Buffer *buf) {
    char page[BLOCKSIZE];
-   HeapFilerHeader *header;
+   HeapFileHeader *header;
    // Get the contents of the heap file header page
    getHeapHeader(fileId, buf, page);
-   header = (HeapFilerHeader *)page;
+   header = (HeapFileHeader *)page;
    // Return the address of the next page in the PageList list
    diskPage->FD = fileId;
    memcpy(&(diskPage->pageId), &(header->next_page), sizeof(int));
@@ -424,10 +424,10 @@ int heapHeaderGetNextPage(fileDescriptor fileId, DiskAddress *diskPage, Buffer *
 
 int heapHeaderGetFreeSpace(fileDescriptor fileId, DiskAddress *diskPage, Buffer *buf) {
    char page[BLOCKSIZE];
-   HeapFilerHeader *header;
+   HeapFileHeader *header;
    // Get the contents of the heap file header page
    getHeapHeader(fileId, buf, &header);
-   header = (HeapFilerHeader *)page;
+   header = (HeapFileHeader *)page;
    // Return the address of the next page in the PageList list
    diskPage->FD = fileId;
    memcpy(&(diskPage->pageId), &(header->freelist), sizeof(int));

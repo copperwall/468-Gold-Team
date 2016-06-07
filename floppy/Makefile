@@ -1,5 +1,9 @@
 CC = gcc
 FLAGS = -Wall -g
+GCC = g++
+CPPFLAGS=-O3 -std=c++0x -Wno-write-strings
+FLOPPYSRC=parser/FLOPPY_statements/FLOPPYCreateTableStatement.cpp parser/FLOPPY_statements/FLOPPYCreateColumn.cpp parser/FLOPPY_statements/FLOPPYPrimaryKey.cpp parser/FLOPPY_statements/FLOPPYForeignKey.cpp parser/FLOPPY_statements/FLOPPYDropTableStatement.cpp parser/FLOPPY_statements/FLOPPYCreateIndexStatement.cpp parser/FLOPPY_statements/FLOPPYDropIndexStatement.cpp parser/FLOPPY_statements/FLOPPYInsertStatement.cpp parser/FLOPPY_statements/FLOPPYValue.cpp parser/FLOPPY_statements/FLOPPYDeleteStatement.cpp parser/FLOPPY_statements/FLOPPYNode.cpp parser/FLOPPY_statements/FLOPPYUpdateStatement.cpp parser/FLOPPY_statements/FLOPPYTableSpec.cpp parser/FLOPPY_statements/FLOPPYSelectItem.cpp parser/FLOPPY_statements/FLOPPYSelectStatement.cpp parser/FLOPPY_statements/FLOPPYTableAttribute.cpp
+PARSERSRC=parser/lex_parse/FLOPPY_parser.cpp parser/lex_parse/FLOPPY_lexer.cpp
 
 TFS468:
 	wget http://users.csc.calpoly.edu/~foaad/class/468/TFS468/libTinyFS.h
@@ -20,6 +24,6 @@ heaptest:
 floppyobjects:
 	$(CC) $(CFLAGS) -g -O -c bufman.c libDisk.o libTinyFS.o readwrite.c heap.c heap_test.c
 floppymain:
-	g++ -o floppy floppy.cpp libDisk.o libTinyFS.o readwrite.o heap.o bufman.o
+	$(GCC) $(CPPFLAGS) -o floppy floppy.cpp libDisk.o libTinyFS.o readwrite.o heap.o bufman.o $(FLOPPYSRC) $(PARSERSRC) parser/FLOPPYParser.cpp parser/FLOPPYOutput.cpp
 clean:
 	rm -f bufman harness

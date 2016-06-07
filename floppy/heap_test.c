@@ -29,7 +29,7 @@ void testSingleAttribute() {
    test.next = NULL;
 
    firstColumn.attName = "winning";
-   firstColumn.attType = INT;
+   firstColumn.attType = TYPE_INT;
    firstColumn.next = NULL;
 
    Buffer *buf = calloc(1, sizeof(Buffer));
@@ -65,11 +65,11 @@ void testDoubleAttribute() {
    test.next = NULL;
 
    firstColumn.attName = "winning";
-   firstColumn.attType = INT;
+   firstColumn.attType = TYPE_INT;
    firstColumn.next = &secondColumn;
 
    secondColumn.attName = "wew";
-   secondColumn.attType = BOOLEAN;
+   secondColumn.attType = TYPE_BOOLEAN;
    secondColumn.next = NULL;
 
    Buffer *buf = calloc(1, sizeof(Buffer));
@@ -94,12 +94,12 @@ void testStringAttribute() {
    test.next = NULL;
 
    firstColumn.attName = "string";
-   firstColumn.attType = VARCHAR;
+   firstColumn.attType = TYPE_VARCHAR;
    firstColumn.attSize = 10;
    firstColumn.next = &secondColumn;
 
    secondColumn.attName = "woop";
-   secondColumn.attType = INT;
+   secondColumn.attType = TYPE_INT;
    secondColumn.next = NULL;
 
    Buffer *buf = calloc(1, sizeof(Buffer));

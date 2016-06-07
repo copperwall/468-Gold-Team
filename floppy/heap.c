@@ -27,26 +27,26 @@ void printRecordDesc(char *recordDesc, int size) {
       i++;
 
       switch (type) {
-         case INT:
+         case TYPE_INT:
             printf("INT\n");
             break;
-         case DATETIME:
+         case TYPE_DATETIME:
             printf("DATETIME\n");
             break;
-         case BOOLEAN:
+         case TYPE_BOOLEAN:
             printf("BOOLEAN\n");
             break;
-         case VARCHAR:
+         case TYPE_VARCHAR:
             printf("VARCHAR ");
             memcpy(&varcharLen, recordHead, sizeof(uint8_t));
             recordHead++;
             i++;
             printf("Length: %d\n", varcharLen);
             break;
-         case FLOAT:
+         case TYPE_FLOAT:
             printf("FLOAT\n");
             break;
-         case PADDING:
+         case TYPE_PADDING:
             printf("PADDING\n");
             memcpy(&varcharLen, recordHead, sizeof(uint8_t));
             recordHead++;
@@ -221,26 +221,26 @@ int generateRecordDescription(tableDescription table, char *record, int *recordS
       // number of bytes required by the current attribute's data type, add the
       // correct number of padding bytes.
       switch (current->attType) {
-         case INT:
-         case DATETIME:
-         case BOOLEAN:
-         case VARCHAR:
+         case TYPE_INT:
+         case TYPE_DATETIME:
+         case TYPE_BOOLEAN:
+         case TYPE_VARCHAR:
             // Make sure the record_size is divisible by four
             if (*recordSize % 4 != 0) {
                padding = 4 - (*recordSize % 4);
                memset(record_head++, 0, 1);
-               memset(record_head++, PADDING, 1);
+               memset(record_head++, TYPE_PADDING, 1);
                memcpy(record_head++, &padding, sizeof(uint8_t));
                *recordSize += padding;
                bytes_copied += 3;
             }
 
             break;
-         case FLOAT:
+         case TYPE_FLOAT:
             // Make sure the record_size is divisible by eight
             if (*recordSize % 8 != 0) {
                padding = 8 - (*recordSize % 8);
-               memset(record_head++, PADDING, 1);
+               memset(record_head++, TYPE_PADDING, 1);
                memcpy(record_head++, &padding, sizeof(uint8_t));
                *recordSize += padding;
             }
@@ -258,7 +258,7 @@ int generateRecordDescription(tableDescription table, char *record, int *recordS
       memcpy(record_head++, &(current->attType), sizeof(uint8_t));
       ++bytes_copied;
 
-      if (current->attType == VARCHAR) {
+      if (current->attType == TYPE_VARCHAR) {
          // We need to put in another byte for size
          // This can be a single byte since the largest varchar is 140
          //
@@ -271,15 +271,15 @@ int generateRecordDescription(tableDescription table, char *record, int *recordS
 
       // The record_head is now pointing at the type byte.
       switch (current->attType) {
-         case INT:
-         case DATETIME:
-         case BOOLEAN:
+         case TYPE_INT:
+         case TYPE_DATETIME:
+         case TYPE_BOOLEAN:
             *recordSize += 4;
             break;
-         case FLOAT:
+         case TYPE_FLOAT:
             *recordSize += 8;
             break;
-         case VARCHAR:
+         case TYPE_VARCHAR:
             // Need to read the next byte to get the variable size of the
             // varchar.
             *recordSize += current->attSize + 1;

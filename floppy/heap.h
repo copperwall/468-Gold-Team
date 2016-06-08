@@ -53,11 +53,14 @@ int heapHeaderGetRecordSize(fileDescriptor fileId, Buffer *buf);
 int heapHeaderGetRecordDesc(fileDescriptor fileId, Buffer *buf, char *bytes);
 int heapHeaderSetTableName(fileDescriptor fileId, Buffer *buf, char *name);
 int heapHeaderGetNextPage(fileDescriptor fileId, DiskAddress *diskPage, Buffer *buf);
+int heapHeaderSetNextPage(fileDescriptor fileId, DiskAddress diskPage, Buffer *buf);
 int heapHeaderGetFreeSpace(fileDescriptor fileId, DiskAddress *diskPage, Buffer *buf);
+int heapHeaderSetFreeSpace(fileDescriptor fileId, DiskAddress diskPage, Buffer *buf);
 
 // Data Page
 int getRecord(Buffer *buf, DiskAddress diskPage, int recordId, char *bytes);
 int putRecord(Buffer *buf, DiskAddress diskPage, int recordId, char *bytes);
+int initDataPageHeader(Buffer *buf, DiskAddress diskPage, char *page);
 
 // Getters and Setters
 int pHGetRecSize(Buffer *buf, DiskAddress page);

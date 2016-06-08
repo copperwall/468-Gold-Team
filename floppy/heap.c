@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include "floppy.h"
 #include "bufman.h"
 #include "readwrite.h"
@@ -72,6 +73,11 @@ void printRecordDesc(char *recordDesc, int size) {
  * Create a new tinyFS file based on the name of the table given.
  * If the volatileFlag is set, create the table in volatile storage.
  */
+
+// TODO: This will set the freelis tand next_page to null in the header page.
+// This means that the first time insertRecord is called, we'll have to create
+// a new page and init the page header. This also will need to update the
+// next_page and freelist values of the file header.
 int createHeapFile(Buffer *buf, char *tableName, tableDescription *createTable) {
    // If the table is non-volatile, create a new tinyFS file and read the
    // header page into the buffer.
@@ -118,6 +124,7 @@ int createHeapFile(Buffer *buf, char *tableName, tableDescription *createTable) 
 
    createTable->fd = diskPage.FD;
 
+
    if (!createTable->isVolatile) {
       // Then put the page into the buffer with the new fd and pageid 0 and
       // flush the page.
@@ -127,6 +134,8 @@ int createHeapFile(Buffer *buf, char *tableName, tableDescription *createTable) 
    }
 
    flushPage(buf, diskPage);
+
+
 
    return SUCCESS;
 }
@@ -301,12 +310,60 @@ int generateRecordDescription(tableDescription table, char *record, int *recordS
 // CRUD Operations
 /////////////////////
 
+/**
+ * TODO: Add new page when full, or freelist is 0
+ */
 int insertRecord(Buffer *buf, char * tableName, char * record, DiskAddress * location) {
    // Need to lookup fd from tableName
    int fd = getFileDescriptorForTable(buf, tableName);
    char bitmap[BITMAP_SIZE];
-   DiskAddress nextFree;
+   DiskAddress nextFree, nextPage, nextDiskPage;
    heapHeaderGetFreeSpace(fd, &nextFree, buf);
+   heapHeaderGetNextPage(fd, &nextPage, buf);
+
+   // Add page, traverse to end of heap file, set new pageid as the next_page
+   // of the last page where next_page is 0.
+   //
+   // S
+   if (nextFree.pageId == 0) {
+      char nextDataPage[BLOCKSIZE];
+      char iterPage[BLOCKSIZE];
+      PageHeader *pageHeader;
+
+      newPage(buf, fd, &nextDiskPage);
+
+      initDataPageHeader(buf, nextDiskPage, nextDataPage);
+      putPage(buf, nextDiskPage, nextDataPage, BLOCKSIZE);
+
+      // If the header next page is null that should be a special case
+      // Otherwise read that pageid in and then start iterating until you get
+      // to 0.
+      if (nextPage.pageId == 0) {
+         heapHeaderSetNextPage(fd, nextDiskPage, buf);
+      } else {
+         // Now we have to traverse disk pages until we find the one with a
+         // pageid of 0
+         // When we start here the nextPage is set to the pageid in the file
+         // header's next_page
+         while (nextPage.pageId != 0) {
+            // Load the page at nextPage
+            // check to see if the the iterPage's
+            readPage(buf, nextPage);
+            getPage(buf, nextPage, iterPage);
+            pageHeader = (PageHeader *)iterPage;
+            nextPage.pageId = pageHeader->next_page;
+         }
+
+         // At this point pageHeader should point to the last page of the heap
+         // file.
+         pageHeader->next_page = nextDiskPage.pageId;
+         putPage(buf, nextPage, iterPage, BLOCKSIZE);
+      }
+
+      // Set the new freelist in the file header
+      heapHeaderSetFreeSpace(fd, nextDiskPage, buf);
+      nextFree = nextDiskPage;
+   }
    // Go to the first pageid of the freelist and find the first free location
    // from the bitmap. Update the bitmap.
    pHGetBitmap(buf, nextFree, bitmap);
@@ -316,6 +373,16 @@ int insertRecord(Buffer *buf, char * tableName, char * record, DiskAddress * loc
    putRecord(buf, nextFree, nextRecordId, record);
    pHSetBitmapTrue(bitmap, nextRecordId);
    pHSetBitmap(buf, nextFree, bitmap);
+   int numRecords = pHIncrementNumRecords(buf, nextFree);
+
+   // If we enter a record and we are not at the max number of records, remove
+   // the page from the freelist in the file header.
+   if (numRecords == pHGetMaxRecords(buf, nextFree)) {
+      DiskAddress empty;
+      empty.FD = fd;
+      empty.pageId = 0;
+      heapHeaderSetFreeSpace(fd, empty, buf);
+   }
    // Update the freelist if that was the last free space.
    // Record the diskaddress in the location out param.
    return SUCCESS;
@@ -456,6 +523,19 @@ int heapHeaderGetNextPage(fileDescriptor fileId, DiskAddress *diskPage, Buffer *
    return SUCCESS;
 }
 
+int heapHeaderSetNextPage(fileDescriptor fileId, DiskAddress diskPage, Buffer *buf) {
+   char page[BLOCKSIZE];
+   HeapFileHeader *header;
+   // Get the contents of the heap file header page
+   getHeapHeader(fileId, buf, page);
+   header = (HeapFileHeader *)page;
+
+   memcpy(&(header->next_page), &(diskPage.pageId), sizeof(int));
+   putPage(buf, diskPage, page, BLOCKSIZE);
+   return SUCCESS;
+}
+
+
 int heapHeaderGetFreeSpace(fileDescriptor fileId, DiskAddress *diskPage, Buffer *buf) {
    char page[BLOCKSIZE];
    HeapFileHeader *header;
@@ -465,6 +545,18 @@ int heapHeaderGetFreeSpace(fileDescriptor fileId, DiskAddress *diskPage, Buffer 
    // Return the address of the next page in the PageList list
    diskPage->FD = fileId;
    memcpy(&(diskPage->pageId), &(header->freelist), sizeof(int));
+   return SUCCESS;
+}
+
+int heapHeaderSetFreeSpace(fileDescriptor fileId, DiskAddress diskPage, Buffer *buf) {
+   char page[BLOCKSIZE];
+   HeapFileHeader *header;
+   // Get the contents of the heap file header page
+   getHeapHeader(fileId, buf, page);
+   header = (HeapFileHeader *)page;
+
+   memcpy(&(header->freelist), &(diskPage.pageId), sizeof(int));
+   putPage(buf, diskPage, page, BLOCKSIZE);
    return SUCCESS;
 }
 
@@ -583,6 +675,7 @@ int pHSetBitmap(Buffer *buf, DiskAddress diskPage, char *bitmap) {
    header = (PageHeader *)page;
 
    memcpy(header->bitmap, bitmap, BITMAP_SIZE);
+   putPage(buf, diskPage, page, BLOCKSIZE);
 }
 
 int pHGetNextPage(Buffer *buf, DiskAddress diskPage) {
@@ -980,4 +1073,27 @@ void printTable(fileDescriptor fileId, Buffer *buf, char *recordDesc) {
       page.pageId = pHGetNextPage(buf, page);
    }
 
+}
+
+// Needs DiskAddress, buffer, page buffer pointer
+int initDataPageHeader(Buffer *buf, DiskAddress diskPage, char *page) {
+   // Fuck filename, no filename
+   PageHeader *pageHeader = (PageHeader *)page;
+   pageHeader->pageid = diskPage.pageId;
+
+   // Get from file header
+   pageHeader->record_size = heapHeaderGetRecordSize(diskPage.FD, buf);
+   // Generate dynamically.
+   pageHeader->max_records = (BLOCKSIZE - sizeof(PageHeader)) / pageHeader->record_size ;
+   pageHeader->num_occupied = 0;
+   // Need to get a unix timestamp for now.
+   pageHeader->create_timestamp = time(NULL);
+   // Same as above.
+   pageHeader->flush_timestamp = time(NULL);
+   pageHeader->next_page = 0;
+   pageHeader->freelist = 0;
+
+   memset(pageHeader->bitmap, 0, BITMAP_SIZE);
+
+   return SUCCESS;
 }

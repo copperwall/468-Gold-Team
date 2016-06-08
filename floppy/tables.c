@@ -93,11 +93,11 @@ int getFileDescriptorForTable(Buffer *buf, char *name) {
  * tableDescription pointer to the tableDescription after it's populated with
  * the description for the given table name.
  */
-tableDescription *getTableDescription(Buffer *buf, char *tableName, tableDescription *out) {
+tableDescription *getTableDescription(Buffer *buf, int fd, tableDescription *out) {
    tableDescription *tables = buf->tables;
 
    while (tables != NULL) {
-      if (!strcmp(tables->tableName, tableName)) {
+      if (tables->fd = fd) {
          memcpy(out, tables, sizeof(tableDescription));
          return out;
       }

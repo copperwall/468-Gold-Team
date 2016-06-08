@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "parser/FLOPPYParser.h"
 
@@ -12,7 +13,7 @@ extern "C" {
 #include "heap.h"
 }
 
-/*
+
 floppy_data_type convertColumnType(ColumnType t) {
    switch(t){
       case(INT) :
@@ -31,8 +32,10 @@ floppy_data_type convertColumnType(ColumnType t) {
 
 void createTable(Buffer *buf, FLOPPYCreateTableStatement *statement) {
    tableDescription td;
-   td.tableName = statement->tableName;
-   
+   char *tName = new char[statement->tableName.length() +1];
+   strcpy(tName, statement->tableName.c_str());
+   td.tableName = tName;
+      
    Attribute *current;
    std::vector<FLOPPYCreateColumn *> columns = *(statement->columns);
    td.attributeList = NULL;
@@ -42,25 +45,28 @@ void createTable(Buffer *buf, FLOPPYCreateTableStatement *statement) {
       current->attName = columns[i]->name;
       current->attSize = columns[i]->size;
       current->attType = convertColumnType(columns[i]->type);
-      current.next = td.attributeList;
+      current->next = td.attributeList;
       td.attributeList = current;
    }
+   
+   //TODO: Implement primary and foreign keys
 
-   td.pKey = statement->pk;
-  
+   //td.pKey = statement->pk;
+
+   /*
    foreignKeys *currentfk;
    std::vector<FLOPPYForeignKey *> fks  = *(statement->fk);
    td.fkeys = NULL;
    for(int i = fks.size() - 1; i >= 0; i--){
       currentfk = new foreignKeys();
       currentfk->tableName = fks[i]->refTableName;
-      
-      
-      
-      
+      //add attributes later
       currentfk.next = td.attributeList;
       td.attributeList = current;
    }
+   */
+   
+   createHeapFile(buf, td.tableName, td);
 
 
 
@@ -68,7 +74,7 @@ void createTable(Buffer *buf, FLOPPYCreateTableStatement *statement) {
 
 void dropTable(Buffer *buf, FLOPPYDropTableStatement *statement) {
    std::cout << "Drop table not implemented" << std::endl;
-} */
+}
 
 /*
  * Takes in a statement as a string, parses it and performs the
@@ -118,13 +124,13 @@ void executeStatement(Buffer *buf, char *statement) {
 }
 
 int main(int argc, char *argv[]) {
-   //tfs_mkfs("floppyTest.dsk", DEFAULT_DISK_SIZE);
-   //tfs_mount("floppyTest.dsk");
+   tfs_mkfs("floppyTest.dsk", DEFAULT_DISK_SIZE);
+   tfs_mount("floppyTest.dsk");
    Buffer *buf = new Buffer();
 
    commence("floppyTest.dsk", buf, MAX_BUFFER_SIZE, MAX_BUFFER_SIZE);
 
-   executeStatement(buf, "DROP TABLE asdfasdfasdfdasfasdfasdfsdafsadfsd;");
+   executeStatement(buf, "DROP TABLE test;");
 
-   //tfs_unmount();
+   tfs_unmount();
 }

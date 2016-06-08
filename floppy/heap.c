@@ -299,28 +299,44 @@ int generateRecordDescription(tableDescription table, char *record, int *recordS
 // CRUD Operations
 /////////////////////
 
-int insertRecord(char * tableName, char * record, DiskAddress * location) {
+int insertRecord(Buffer *buf, char * tableName, char * record, DiskAddress * location) {
    // Need to lookup fd from tableName
+   int fd = getFileDescriptorForTable(buf, tableName);
+   char bitmap[BITMAP_SIZE];
+   DiskAddress nextFree;
+   heapHeaderGetFreeSpace(fd, &nextFree, buf);
    // Go to the first pageid of the freelist and find the first free location
    // from the bitmap. Update the bitmap.
+   pHGetBitmap(buf, nextFree, bitmap);
+
+   int nextRecordId = pHGetNextRecordSpace(bitmap);
+
+   putRecord(buf, nextFree, nextRecordId, record);
    // Update the freelist if that was the last free space.
    // Record the diskaddress in the location out param.
-   return ERROR;
+   return SUCCESS;
 }
 
-int deleteRecord(DiskAddress diskPage, int recordId) {
-   // Read the diskaddress into the buffer, read the record size and go to that
-   // offset after the page header.
-   // Maybe just set the bitmap to available.
-   //
-   // Update the freelist if that's the first free space.
-   return ERROR;
+// Read the diskaddress into the buffer, read the record size and go to that
+// offset after the page header.
+// Maybe just set the bitmap to available.
+//
+// Update the freelist if that's the first free space.
+int deleteRecord(Buffer *buf, DiskAddress diskPage, int recordId) {
+   char bitmap[BITMAP_SIZE];
+   pHGetBitmap(buf, diskPage, bitmap);
+
+   int deletedRecordId = pHGetNextRecordSpace(bitmap);
+
+   pHSetRecordSpaceAvailable(bitmap, deletedRecordId);
+   return SUCCESS;
 }
 
-int updateRecord(DiskAddress diskPage, int recordId, char *record) {
-   // Read in the diskaddress and go to the record offset and write in the
-   // updated record.
-   return ERROR;
+// Read in the diskaddress and go to the record offset and write in the
+// updated record.
+int updateRecord(Buffer *buf, DiskAddress diskPage, int recordId, char *record) {
+   putRecord(buf, diskPage, recordId, record);
+   return SUCCESS;
 }
 
 // Loads the Heap File Header page into the buffer if not present, otherwise returns contents of that page
@@ -633,4 +649,43 @@ int pHSetNextFree(Buffer *buf, DiskAddress diskPage, int nextFree) {
 
    header->freelist = nextFree;
    putPage(buf, diskPage, page, BLOCKSIZE);
+}
+
+// For each bit, check to see if it is a 0.
+// If it is, return the record slot id that is available.
+int pHGetNextRecordSpace(char *bitmap) {
+   int i;
+
+   for (i = 0; i < BITMAP_SIZE; i++) {
+      if (!(*bitmap >> (i % 8)) & 0x01) {
+         return i;
+      }
+
+      if (i % 8 == 7) {
+         // Move on to the next byte.
+         bitmap++;
+      }
+   }
+
+   return ERROR;
+}
+
+int pHSetRecordSpaceOccupied(char *bitmap, int recordId) {
+   int byteNum;
+
+   byteNum = recordId / 8;
+
+   bitmap[byteNum] = bitmap[byteNum] | (0x01 << (recordId % 8));
+
+   return SUCCESS;
+}
+
+int pHSetRecordSpaceAvailable(char *bitmap, int recordId) {
+   int byteNum;
+
+   byteNum = recordId / 8;
+
+   bitmap[byteNum] = bitmap[byteNum] & (!(0x01 << (recordId % 8)));
+
+   return SUCCESS;
 }

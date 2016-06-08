@@ -78,6 +78,9 @@ int pHGetNextFree(Buffer *buf, DiskAddress page);
 int pHSetNextFree(Buffer *buf, DiskAddress diskPage, int nextFree);
 //CRUD
 int generateRecordDescription(tableDescription table, char *record, int *recordSize);
-int insertRecord(char * tableName, char * record, DiskAddress * location);
-int deleteRecord(DiskAddress diskPage, int recordId);
-int updateRecord(DiskAddress diskPage, int recordId, char *record);
+int insertRecord(Buffer *buf, char * tableName, char * record, DiskAddress * location);
+int deleteRecord(Buffer *buf, DiskAddress diskPage, int recordId);
+int updateRecord(Buffer *buf, DiskAddress diskPage, int recordId, char *record);
+int pHGetNextRecordSpace(char *bitmap);
+int pHSetRecordSpaceOccupied(char *bitmap, int recordId);
+int pHSetRecordSpaceAvailable(char *bitmap, int recordId);

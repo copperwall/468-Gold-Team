@@ -82,5 +82,9 @@ int insertRecord(Buffer *buf, char * tableName, char * record, DiskAddress * loc
 int deleteRecord(Buffer *buf, DiskAddress diskPage, int recordId);
 int updateRecord(Buffer *buf, DiskAddress diskPage, int recordId, char *record);
 int pHGetNextRecordSpace(char *bitmap);
+
 int pHSetBitmapTrue(char *bitmap, int recordId);
 int pHSetBitmapFalse(char *bitmap, int recordId);
+
+int pHIncrementNumRecords(Buffer *buf, DiskAddress diskPage);
+int pHDecrementNumRecords(Buffer *buf, DiskAddress diskPage);

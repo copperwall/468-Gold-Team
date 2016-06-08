@@ -692,3 +692,17 @@ int pHSetBitmapFalse(char *bitmap, int recordId) {
 
    return SUCCESS;
 }
+
+int pHIncrementNumRecords(Buffer *buf, DiskAddress diskPage) {
+   int numRecords = pHGetNumRecords(buf, diskPage);
+
+   pHSetNumRecords(buf, diskPage, numRecords + 1);
+   return SUCCESS;
+}
+
+int pHDecrementNumRecords(Buffer *buf, DiskAddress diskPage) {
+   int numRecords = pHGetNumRecords(buf, diskPage);
+
+   pHSetNumRecords(buf, diskPage, numRecords - 1);
+   return SUCCESS;
+}

@@ -114,10 +114,15 @@ tableDescription *getTableDescription(Buffer *buf, int fd, tableDescription *out
 
    while (tables != NULL) {
       if (tables->fd = fd) {
+         printf("Found table %s %d\n", tables->tableName, tables->fd);
          memcpy(out, tables, sizeof(tableDescription));
          return out;
+      } else {
+         printf("next\n");
+         tables = tables->next;
       }
    }
+   printf("DID NOT FIND TABLE DESCRIPTION\n");
 
    return NULL;
 }

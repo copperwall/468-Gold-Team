@@ -931,7 +931,7 @@ void printRecord(char *recordDesc, int size, char *record) {
             printf("%s | ", out);
             break;
          case TYPE_VARCHAR:
-            memcpy(&varcharLen, recordHead, sizeof(uint8_t));
+            memcpy(&varcharLen, recordHead, sizeof(uint32_t));
             getField(attribute, record, recordDesc, varcharLen, out);
             printf("%s | ", out);
             recordHead++;

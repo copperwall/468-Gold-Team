@@ -973,7 +973,7 @@ void printTable(fileDescriptor fileId, Buffer *buf, char *recordDesc) {
       for (ndx = 0; ndx < num; ndx++) {
          if (isRecordAvailable(bitmap, ndx)) {
             getRecord(buf, page, ndx, record);
-            printRecord(recordDesc, header.record_size, record);
+            printRecord(recordDesc, header.record_desc_size, record);
          }
       }
       page.pageId = pHGetNextPage(buf, page);

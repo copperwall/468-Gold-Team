@@ -540,7 +540,7 @@ int heapHeaderGetFreeSpace(fileDescriptor fileId, DiskAddress *diskPage, Buffer 
    char page[BLOCKSIZE];
    HeapFileHeader *header;
    // Get the contents of the heap file header page
-   getHeapHeader(fileId, buf, &header);
+   getHeapHeader(fileId, buf, page);
    header = (HeapFileHeader *)page;
    // Return the address of the next page in the PageList list
    diskPage->FD = fileId;

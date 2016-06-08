@@ -127,7 +127,6 @@ void insert(Buffer *buf, FLOPPYInsertStatement *statement) {
    // TODO: fix this function, the final param is not used.
    printf("insertin gthe record\n");
    insertRecord(buf, statement->name, record, NULL);
-
 }
 
 void createTable(Buffer *buf, FLOPPYCreateTableStatement *statement) {

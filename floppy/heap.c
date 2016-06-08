@@ -927,7 +927,6 @@ void printRecord(char *recordDesc, int size, char *record) {
             printf("%s | ", out);
             break;
          case TYPE_PADDING:
-            printf("PADDING");
             memcpy(&varcharLen, recordHead, sizeof(uint8_t));
             recordHead++;
             i++;
@@ -937,7 +936,7 @@ void printRecord(char *recordDesc, int size, char *record) {
       }
    }
 
-   printf("\nDone\n");
+   printf("\n\n");
 }
 
 void printTable(fileDescriptor fileId, Buffer *buf, char *recordDesc) {
@@ -957,9 +956,9 @@ void printTable(fileDescriptor fileId, Buffer *buf, char *recordDesc) {
       num = pHGetMaxRecords(buf, page);
       pHGetBitmap(buf, page, bitmap);
       for (ndx = 0; ndx < num; ndx++) {
-         if () {
+         if (isRecordAvailable(bitmap, ndx)) {
             getRecord(buf, page, ndx, record);
-            printRecord(recordDesc, header.recordSize);
+            printRecord(recordDesc, header.recordSize, record);
          }
       }
       page.pageId = pHGetNextPage(buf, page);

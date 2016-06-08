@@ -100,3 +100,4 @@ int getRecordHeader(char *record, char *rd, char *value);
 void printRecord(char *recordDesc, int size, char *record);
 void printRecordLabel(char *recordDesc, int size);
 void printRecordDesc(char *recordDesc, int size);
+void printTable(fileDescriptor fileId, Buffer *buf, char *recordDesc);

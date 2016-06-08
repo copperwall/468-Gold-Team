@@ -23,7 +23,7 @@ void testSingleAttribute() {
    tfs_mkfs("yo.dsk", DEFAULT_DISK_SIZE);
    tfs_mount("yo.dsk");
 
-   test.tableName = "sup";
+   strcpy(test.tableName, "list");
    test.attributeList = &firstColumn;
    test.pKey = &firstColumn;
    test.isVolatile = 0;
@@ -47,6 +47,43 @@ void testSingleAttribute() {
    tfs_unmount();
 }
 
+void testFullTable() {
+   tableDescription test;
+   // How are these different?
+   Attribute firstColumn;
+
+   // TODO: OKAY need to create a bytearray with the expected value of the
+   // recordDescription returned from the heapfile
+   // 4 bytes for the name, 1 byte for INT type
+
+   tfs_mkfs("yo.dsk", DEFAULT_DISK_SIZE);
+   tfs_mount("yo.dsk");
+
+   strcpy(test.tableName, "list");
+   test.attributeList = &firstColumn;
+   test.pKey = &firstColumn;
+   test.isVolatile = 0;
+   test.next = NULL;
+
+   firstColumn.attName = "winning";
+   firstColumn.attType = TYPE_INT;
+   firstColumn.next = NULL;
+
+   Buffer *buf = calloc(1, sizeof(Buffer));
+   commence("yo.dsk", buf, MAX_BUFFER_SIZE, MAX_BUFFER_SIZE);
+   createPersistentTable(buf, test);
+   /* createHeapFile(buf, test.tableName, test); */
+
+   char tableName[MAX_TABLENAME_SIZE];
+   // At this point, the header should be in the buffer
+   heapHeaderGetTableName(0, buf, tableName);
+   printf("Table name from header page is %s\n", tableName);
+   heapHeaderSetTableName(0, buf, "lols");
+   heapHeaderGetTableName(0, buf, tableName);
+   printf("Table name from header page after set is %s\n", tableName);
+   tfs_unmount();
+}
+
 void testDoubleAttribute() {
    tableDescription test;
    // How are these different?
@@ -59,7 +96,7 @@ void testDoubleAttribute() {
    tfs_mkfs("yo.dsk", DEFAULT_DISK_SIZE);
    tfs_mount("yo.dsk");
 
-   test.tableName = "sup";
+   strcpy(test.tableName, "list");
    test.attributeList = &firstColumn;
    test.pKey = &firstColumn;
    test.isVolatile = 0;
@@ -88,7 +125,7 @@ void testStringAttribute() {
    tfs_mkfs("yo.dsk", DEFAULT_DISK_SIZE);
    tfs_mount("yo.dsk");
 
-   test.tableName = "sup";
+   strcpy(test.tableName, "list");
    test.attributeList = &firstColumn;
    test.pKey = &firstColumn;
    test.isVolatile = 0;

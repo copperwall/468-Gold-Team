@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #define E_TABLE_EXISTS -2
+#define MAX_TABLENAME_SIZE 50
 
 // Padding is used in record descriptions on the file header page.
 typedef enum {TYPE_INT, TYPE_FLOAT, TYPE_VARCHAR, TYPE_DATETIME, TYPE_BOOLEAN, TYPE_PADDING} floppy_data_type;
@@ -25,7 +26,7 @@ typedef struct FK {
 } foreignKeys;
 
 typedef struct Tables {
-   char *tableName;           // The table name
+   char tableName[MAX_TABLENAME_SIZE];           // The table name
    Attribute *attributeList;  // The pointer to the first Attribute in a list
    Attribute *pKey;           // The pointer to the first Attribute of the PK
    foreignKeys *fKeys;        // The pointer to the first FK

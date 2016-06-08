@@ -407,6 +407,8 @@ int heapHeaderSetTableName(fileDescriptor fileId, Buffer *buf, char *name) {
       if (!strcmp(tables->tableName, oldName)) {
          strcpy(tables->tableName, header->table_name);
       }
+
+      tables = tables->next;
    }
 }
 

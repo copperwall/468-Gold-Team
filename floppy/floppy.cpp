@@ -59,7 +59,61 @@ floppy_data_type convertColumnType(ColumnType t) {
 
 
 void insert(Buffer *buf, FLOPPYInsertStatement *statement) {
+   // Get the table description
+   int target_fd = getFileDescriptorForTable(buf, statement->name);
+   tableDescription td;
+   getTableDescription(buf, target_fd, &td);
+
+   // Get the size of the record:
+
+   // Create a buffer for the record's description
+   char* rd = new char[2048];
+   // get the rd
+   int rd_size = heapHeaderGetRecordDesc(target_fd, buf, rd);
+   int record_size = heapHeaderGetRecordSize(target_fd, buf);
+
+   char* record = new char[2048];
+
+   // Now we have the rd, rdSize, and the field name
+
+   // Iterate over the attributes of the FLOPPYInsertStatement and 
+   //   call setField, passing the buffer
+   // call insertRecord
+   std::vector<FLOPPYValue*> values = *(statement->values);
+
+   for(int i = 0; i < values.size(); i++) {
+      FLOPPYValue* val = values[i];
+      switch (val->type()) {
+         case ValueType::StringValue:
+            setField(val->tableAttribute->attribute, record, rd,
+             rd_size, val->sVal);
+            break;
+         case ValueType::IntValue:
+            /*
+            setField(val->tableAttribute->attribute, record, rd,
+             rd_size, val->iVal);
+            */
+            break;
+         case ValueType::FloatValue:
+            /*
+            setField(val->tableAttribute->attribute, record, rd,
+             rd_size, val->fVal);
+            */
+            break;
+         case ValueType::BooleanValue:
+            /*
+            setField(val->tableAttribute->attribute, record, rd,
+             rd_size, val->bVal);
+             */
+            break;
+         case ValueType::NullValue:
+            break;
+      }
+   }
+
    //insertRecord(buf, char *tableName, char *record, DiskAddress *location);
+   // TODO: fix this function, the final param is not used.
+   insertRecord(buf, statement->name, record, NULL);
 
 }
 

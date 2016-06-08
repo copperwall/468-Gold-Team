@@ -2,6 +2,7 @@
 #define __FLOPPY_OUTPUT_H_
 
 #include "FLOPPY_statements/FLOPPYStatement.h"
+#include <sys/types.h>
 
 /**
  * Represents the result of the FLOPPYParser.

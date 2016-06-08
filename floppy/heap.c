@@ -946,7 +946,7 @@ void printTable(fileDescriptor fileId, Buffer *buf, char *recordDesc) {
    DiskAddress page;
    HeapFileHeader header;
 
-   getHeapFileHeader(fileId, buf, &header);
+   getHeapHeader(fileId, buf, &header);
    page.FD = fileId;
    page.pageId = header.next_page;
    // Print Table Header

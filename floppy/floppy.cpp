@@ -11,8 +11,28 @@ extern "C" {
 #include "floppy.h"
 #include "bufman.h"
 #include "heap.h"
+#include "tables.h"
 }
 
+/*int project(Buffer *buf, int fd, std::vector<FLOPPYSelectItem *> selectItems, int *outTable){
+   tableDescription tempTable;
+   getTableDescription(buf, fd, &tableDescription);
+
+   tableDescription.tableName = strcat("TEMP_");
+
+   createVolitileTable(buf, );
+}*
+
+int selectScan(int fd, int *outTable) {
+   return 1;
+}
+
+void selectStatement(Buffer *buf, FLOPPYSelectStatement *statement) {
+   std::vector<FLOPPYTableSpec *> tables = *(statement->tableSpecs);
+
+   int origFD = getFileDescriptorForTable(buf, tables[0]->tableName);
+   std::cout << "Select Statement Not Yet Implemented" << std::endl;
+}*/
 
 floppy_data_type convertColumnType(ColumnType t) {
    switch(t){
@@ -27,6 +47,12 @@ floppy_data_type convertColumnType(ColumnType t) {
       case(BOOLEAN) :
          return TYPE_BOOLEAN;
    }
+}
+
+
+void insert(Buffer *buf, FLOPPYInsertStatement *statement) {
+   //insertRecord(buf, char *tableName, char *record, DiskAddress *location);
+
 }
 
 void createTable(Buffer *buf, FLOPPYCreateTableStatement *statement) {
@@ -49,7 +75,7 @@ void createTable(Buffer *buf, FLOPPYCreateTableStatement *statement) {
    }
 
    std::vector<char *> primKeys = *(statement->pk->attributes);
-   td.pKey = statement->pk;
+   td.pKey = NULL;
 
    for(int i = primKeys.size() - 1; i >= 0; i--){
       current = new Attribute();
@@ -74,7 +100,7 @@ void createTable(Buffer *buf, FLOPPYCreateTableStatement *statement) {
    }
    */
    
-   createHeapFile(buf, td.tableName, td);
+   createPersistentTable(buf, td);
 }
 
 void dropTable(Buffer *buf, FLOPPYDropTableStatement *statement) {
@@ -108,6 +134,7 @@ void executeStatement(Buffer *buf, char *statement) {
             break;
          case(StatementType::InsertStatement) :
             std::cout << "Found Insert Statement" << std::endl;
+            //dropTable(buf, (FLOPPYInsertStatement *)output->statement);
             break;
          case(StatementType::DeleteStatement) :
             std::cout << "Found Delete Statement" << std::endl;
@@ -117,6 +144,7 @@ void executeStatement(Buffer *buf, char *statement) {
             break;
          case(StatementType::SelectStatement) :
             std::cout << "Found Select Statement" << std::endl;
+            //selectStatement(buf, (FLOPPYSelectStatement *)output->statement);
             break;
          default :
             std::cout << "Unknown statement type" << std::endl;

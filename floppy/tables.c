@@ -4,6 +4,7 @@
 #include "heap.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 /**
  * Given a Buffer and tableDescription, create a new persistent table.
@@ -34,7 +35,11 @@ int createPersistentTable(Buffer *buf, tableDescription table) {
    tableDescription *newTable = calloc(sizeof(tableDescription), 1);
    memcpy(newTable, &table, sizeof(tableDescription));
 
-   prev->next = newTable;
+   if (buf->tables == NULL) {
+      buf->tables = newTable;
+   } else {
+      prev->next = newTable;
+   }
 
    // Create heapfile for new table
    chkerr(createHeapFile(buf, table.tableName, table));

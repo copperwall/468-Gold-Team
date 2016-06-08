@@ -1,6 +1,5 @@
 // Heap File Stuff goes here
 
-#define MAX_TABLENAME_SIZE 50
 #define BITMAP_SIZE 128
 
 typedef struct heap_file_header {

@@ -64,6 +64,8 @@ void insert(Buffer *buf, FLOPPYInsertStatement *statement) {
    tableDescription td;
    getTableDescription(buf, target_fd, &td);
 
+   printf("INSERT INTO %d\n", target_fd);
+
    // Get the size of the record:
 
    // Create a buffer for the record's description
@@ -162,6 +164,7 @@ void createTable(Buffer *buf, FLOPPYCreateTableStatement *statement) {
    
    printf("TABLE JUST ADDED: %s\n", td.tableName);
 
+   td.isVolatile = 0;
    if(createPersistentTable(buf, td) == E_TABLE_EXISTS) {
       std::cout << "Table already exists" << std::endl;
    }
@@ -199,6 +202,7 @@ void executeStatement(Buffer *buf, char *statement) {
          case(StatementType::InsertStatement) :
             std::cout << "Found Insert Statement" << std::endl;
             //dropTable(buf, (FLOPPYInsertStatement *)output->statement);
+            insert(buf, (FLOPPYInsertStatement*)output->statement);
             break;
          case(StatementType::DeleteStatement) :
             std::cout << "Found Delete Statement" << std::endl;
@@ -227,12 +231,16 @@ int main(int argc, char *argv[]) {
 
    commence("floppyTest.dsk", buf, MAX_BUFFER_SIZE, MAX_BUFFER_SIZE);
 
+   /*
    executeStatement(buf, "CREATE TABLE list (LastName VARCHAR(16), FirstName VARCHAR(16), grade INT, classroom INT, PRIMARY KEY(FirstName, LastName));");
-    
-   executeStatement(buf, "SELECT * FROM list;");
+    */
+   executeStatement(buf, "CREATE TABLE scott(foo VARCHAR(20), bar VARCHAR(50), PRIMARY KEY(foo));");
+   executeStatement(buf, "INSERT INTO scott VALUES('abcd', 'efgh');");
+   //executeStatement(buf, "SELECT * FROM scott;");
 
-   executeStatement(buf, "DROP TABLE list;");
+   executeStatement(buf, "DROP TABLE scott;");
 
+   std::cout << "done" << std::endl;
 
    tfs_unmount();
 }

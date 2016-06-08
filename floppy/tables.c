@@ -13,17 +13,20 @@
  * Otherwise
  */
 int createPersistentTable(Buffer *buf, tableDescription table) {
+   printf("PERSISTING TABLE\n");
    tableDescription *tables = buf->tables;
    tableDescription *prev;
    DiskAddress header;
 
    if (table.isVolatile) {
       // The table being created should not be volatile.
+      printf("ERROR TABLE IS VOLATILE");
       return ERROR;
    }
 
    while (tables != NULL) {
-      if (!strcmp(tables->tableName, table.tableName)) {
+      if (strcmp(tables->tableName, table.tableName) == 0) {
+         printf("ERROR TABLE EXISTS");
          return E_TABLE_EXISTS;
       }
 
@@ -37,7 +40,9 @@ int createPersistentTable(Buffer *buf, tableDescription table) {
 
    if (buf->tables == NULL) {
       buf->tables = newTable;
+      printf("Set buf->tables\n");
    } else {
+      printf("appended to %s\n", prev->tableName);
       prev->next = newTable;
    }
 
@@ -85,10 +90,15 @@ int getFileDescriptorForTable(Buffer *buf, char *name) {
    tableDescription *tables = buf->tables;
 
    while (tables != NULL) {
-      if (!strcmp(tables->tableName, name)) {
+      if (strcmp(tables->tableName, name) == 0) {
+         printf("Found table %s %d\n", tables->tableName, tables->fd);
          return tables->fd;
+      } else {
+         printf("next\n");
+         tables = tables->next;
       }
    }
+   printf("ERROR LOOKING UP TABLE\n");
 
    return ERROR;
 }

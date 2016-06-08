@@ -9,7 +9,7 @@
  * Given a Buffer and tableDescription, create a new persistent table.
  *
  * Returns Table Error if a table with the given name already exists.
- * Otherwise 
+ * Otherwise
  */
 int createPersistentTable(Buffer *buf, tableDescription table) {
    tableDescription *tables = buf->tables;
@@ -86,4 +86,22 @@ int getFileDescriptorForTable(Buffer *buf, char *name) {
    }
 
    return ERROR;
+}
+
+/**
+ * Given a buffer, a table name, and a pointer to a tableDescription, return a
+ * tableDescription pointer to the tableDescription after it's populated with
+ * the description for the given table name.
+ */
+tableDescription *getTableDescription(Buffer *buf, char *tableName, tableDescription *out) {
+   tableDescription *tables = buf->tables;
+
+   while (tables != NULL) {
+      if (!strcmp(tables->tableName, tableName)) {
+         memcpy(out, tables, sizeof(tableDescription));
+         return out;
+      }
+   }
+
+   return NULL;
 }

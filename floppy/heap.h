@@ -86,6 +86,8 @@ int pHGetNextRecordSpace(char *bitmap);
 int pHSetBitmapTrue(char *bitmap, int recordId);
 int pHSetBitmapFalse(char *bitmap, int recordId);
 
+int isRecordAvailable(char *bitmap, int recordId);
+
 int pHIncrementNumRecords(Buffer *buf, DiskAddress diskPage);
 int pHDecrementNumRecords(Buffer *buf, DiskAddress diskPage);
 

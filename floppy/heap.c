@@ -693,6 +693,14 @@ int pHSetBitmapFalse(char *bitmap, int recordId) {
    return SUCCESS;
 }
 
+int isRecordAvailable(char *bitmap, int recordId) {
+   int byteNum;
+
+   byteNum = recordId / 8;
+
+   return (bitmap[byteNum] >> recordId % 8) & 0x01;
+}
+
 int pHIncrementNumRecords(Buffer *buf, DiskAddress diskPage) {
    int numRecords = pHGetNumRecords(buf, diskPage);
 
@@ -705,33 +713,6 @@ int pHDecrementNumRecords(Buffer *buf, DiskAddress diskPage) {
 
    pHSetNumRecords(buf, diskPage, numRecords - 1);
    return SUCCESS;
-}
-
-// Search the record description for the fieldName, counting the number of
-// bytes as each attribute is iterated over.
-//
-// Once the fieldName is found, return the offset of the record. Write out the
-// number of bytes the attribute takes up to out after offset number of bytes
-// in the record
-int getField(char *fieldName, char *record, char *rd, int rdSize, char *out) {
-   int attSize;
-   int offset = findAttribute(fieldName, rd, rdSize, &attSize);
-
-   memcpy(out, record + offset, attSize);
-   return ERROR;
-}
-
-int setField(char *fieldName, char *record, char *rd, int rdSize, char *value) {
-   int attSize;
-   int offset = findAttribute(fieldName, rd, rdSize, &attSize);
-
-   memcpy(record + offset, value, attSize);
-   return ERROR;
-}
-
-// Unimplemented because we don't use those.
-int getRecordHeader(char *record, char *rd, char *value) {
-   return ERROR;
 }
 
 /**
@@ -816,6 +797,34 @@ int findAttribute(char *fieldName, char *rd, int rdSize, int *attSize) {
 
    return ERROR;
 }
+
+// Search the record description for the fieldName, counting the number of
+// bytes as each attribute is iterated over.
+//
+// Once the fieldName is found, return the offset of the record. Write out the
+// number of bytes the attribute takes up to out after offset number of bytes
+// in the record
+int getField(char *fieldName, char *record, char *rd, int rdSize, char *out) {
+   int attSize;
+   int offset = findAttribute(fieldName, rd, rdSize, &attSize);
+
+   memcpy(out, record + offset, attSize);
+   return ERROR;
+}
+
+int setField(char *fieldName, char *record, char *rd, int rdSize, char *value) {
+   int attSize;
+   int offset = findAttribute(fieldName, rd, rdSize, &attSize);
+
+   memcpy(record + offset, value, attSize);
+   return ERROR;
+}
+
+// Unimplemented because we don't use those.
+int getRecordHeader(char *record, char *rd, char *value) {
+   return ERROR;
+}
+
 
 void printRecordLabel(char *recordDesc, int size) {
    int i = 0;

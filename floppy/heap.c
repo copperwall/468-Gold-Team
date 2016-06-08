@@ -948,9 +948,9 @@ void printTable(fileDescriptor fileId, Buffer *buf, char *recordDesc) {
 
    getHeapFileHeader(fileId, buf, &header);
    page.FD = fileId;
-   page.pageId = header.nextPage;
+   page.pageId = header.next_page;
    // Print Table Header
-   printRecordLabel(recordDesc, header.recordSize);
+   printRecordLabel(recordDesc, header.record_size);
    // Print records
    while (page.pageId) {
       num = pHGetMaxRecords(buf, page);
@@ -958,7 +958,7 @@ void printTable(fileDescriptor fileId, Buffer *buf, char *recordDesc) {
       for (ndx = 0; ndx < num; ndx++) {
          if (isRecordAvailable(bitmap, ndx)) {
             getRecord(buf, page, ndx, record);
-            printRecord(recordDesc, header.recordSize, record);
+            printRecord(recordDesc, header.record_size, record);
          }
       }
       page.pageId = pHGetNextPage(buf, page);

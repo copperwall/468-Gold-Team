@@ -12,19 +12,82 @@ extern "C" {
 #include "heap.h"
 }
 
+/*
+floppy_data_type convertColumnType(ColumnType t) {
+   switch(t){
+      case(INT) :
+         return TYPE_INT;
+      case(FLOAT) :
+         return TYPE_FLOAT;
+      case(DATETIME) :
+         return TYPE_DATETIME;
+      case(VARCHAR) :
+         return TYPE_VARCHAR;
+      case(BOOLEAN) :
+         return TYPE_BOOLEAN;
+   }
+}
 
-void executeStatement(char *statement){
+
+void createTable(Buffer *buf, FLOPPYCreateTableStatement *statement) {
+   tableDescription td;
+   td.tableName = statement->tableName;
+   
+   Attribute *current;
+   std::vector<FLOPPYCreateColumn *> columns = *(statement->columns);
+   td.attributeList = NULL;
+
+   for(int i = columns.size() - 1; i >= 0; i--){
+      current = new Attribute();
+      current->attName = columns[i]->name;
+      current->attSize = columns[i]->size;
+      current->attType = convertColumnType(columns[i]->type);
+      current.next = td.attributeList;
+      td.attributeList = current;
+   }
+
+   td.pKey = statement->pk;
+  
+   foreignKeys *currentfk;
+   std::vector<FLOPPYForeignKey *> fks  = *(statement->fk);
+   td.fkeys = NULL;
+   for(int i = fks.size() - 1; i >= 0; i--){
+      currentfk = new foreignKeys();
+      currentfk->tableName = fks[i]->refTableName;
+      
+      
+      
+      
+      currentfk.next = td.attributeList;
+      td.attributeList = current;
+   }
+
+
+
+}
+
+void dropTable(Buffer *buf, FLOPPYDropTableStatement *statement) {
+   std::cout << "Drop table not implemented" << std::endl;
+} */
+
+/*
+ * Takes in a statement as a string, parses it and performs the
+ * required action using helper methods 
+ */
+void executeStatement(Buffer *buf, char *statement) {
    FLOPPYOutput *output = FLOPPYParser::parseFLOPPYString(statement);
-   if (output->isValid) { // Use isValid flag to detect is parser parsed correctly.
+   if (output->isValid) { // Use isValid flag to detect if parser parsed correctly.
       switch(output->statement->type()) {
          case(StatementType::ErrorStatement) : 
             std::cout << "Found Error Statement" << std::endl;
             break;
          case(StatementType::CreateTableStatement) :
             std::cout << "Found Create Table Statement" << std::endl;
+            createTable(buf, (FLOPPYCreateTableStatement *)output->statement);
             break;
          case(StatementType::DropTableStatement) :
             std::cout << "Found Drop Table Statement" << std::endl;
+            dropTable(buf, (FLOPPYDropTableStatement *)output->statement);
             break;
          case(StatementType::CreateIndexStatement) :
             std::cout << "Found Create Index Statement" << std::endl;
@@ -55,5 +118,13 @@ void executeStatement(char *statement){
 }
 
 int main(int argc, char *argv[]) {
-   executeStatement("DROP TABLE test;");
+   //tfs_mkfs("floppyTest.dsk", DEFAULT_DISK_SIZE);
+   //tfs_mount("floppyTest.dsk");
+   Buffer *buf = new Buffer();
+
+   commence("floppyTest.dsk", buf, MAX_BUFFER_SIZE, MAX_BUFFER_SIZE);
+
+   executeStatement(buf, "DROP TABLE asdfasdfasdfdasfasdfasdfsdafsadfsd;");
+
+   //tfs_unmount();
 }

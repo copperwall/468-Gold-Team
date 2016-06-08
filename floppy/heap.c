@@ -693,6 +693,14 @@ int pHSetBitmapFalse(char *bitmap, int recordId) {
    return SUCCESS;
 }
 
+int isRecordAvailable(char *bitmap, int recordId) {
+   int byteNum;
+
+   byteNum = recordId / 8;
+
+   return (bitmap[byteNum] >> recordId % 8) & 0x01;
+}
+
 int pHIncrementNumRecords(Buffer *buf, DiskAddress diskPage) {
    int numRecords = pHGetNumRecords(buf, diskPage);
 

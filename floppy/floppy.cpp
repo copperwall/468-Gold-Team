@@ -14,25 +14,33 @@ extern "C" {
 #include "tables.h"
 }
 
-/*int project(Buffer *buf, int fd, std::vector<FLOPPYSelectItem *> selectItems, int *outTable){
+/*
+int project(Buffer *buf, int fd, std::vector<FLOPPYSelectItem *> selectItems, int *outTable){
    tableDescription tempTable;
    getTableDescription(buf, fd, &tableDescription);
 
    tableDescription.tableName = strcat("TEMP_");
 
-   createVolitileTable(buf, );
-}*
+   createVolitileTable(bu);
+}
 
 int selectScan(int fd, int *outTable) {
    return 1;
-}
+}*/
 
 void selectStatement(Buffer *buf, FLOPPYSelectStatement *statement) {
    std::vector<FLOPPYTableSpec *> tables = *(statement->tableSpecs);
+   printf("TABLE TO SELECT: %s\n", tables[0]->tableName);
+   char *recordDesc = (char *)malloc(2048);
 
    int origFD = getFileDescriptorForTable(buf, tables[0]->tableName);
-   std::cout << "Select Statement Not Yet Implemented" << std::endl;
-}*/
+   printf("FD FOR TABLE: %d\n", origFD);
+   heapHeaderGetRecordDesc(origFD, buf, recordDesc);
+
+   printTable(origFD, buf, recordDesc);
+
+   //std::cout << "Select Statement Not Yet Implemented" << std::endl;
+}
 
 floppy_data_type convertColumnType(ColumnType t) {
    switch(t){
@@ -100,7 +108,11 @@ void createTable(Buffer *buf, FLOPPYCreateTableStatement *statement) {
    }
    */
    
-   createPersistentTable(buf, td);
+   printf("TABLE JUST ADDED: %s\n", td.tableName);
+
+   if(createPersistentTable(buf, td) == E_TABLE_EXISTS) {
+      std::cout << "Table already exists" << std::endl;
+   }
 }
 
 void dropTable(Buffer *buf, FLOPPYDropTableStatement *statement) {
@@ -144,7 +156,7 @@ void executeStatement(Buffer *buf, char *statement) {
             break;
          case(StatementType::SelectStatement) :
             std::cout << "Found Select Statement" << std::endl;
-            //selectStatement(buf, (FLOPPYSelectStatement *)output->statement);
+            selectStatement(buf, (FLOPPYSelectStatement *)output->statement);
             break;
          default :
             std::cout << "Unknown statement type" << std::endl;
@@ -164,7 +176,9 @@ int main(int argc, char *argv[]) {
    commence("floppyTest.dsk", buf, MAX_BUFFER_SIZE, MAX_BUFFER_SIZE);
 
    executeStatement(buf, "CREATE TABLE list (LastName VARCHAR(16), FirstName VARCHAR(16), grade INT, classroom INT, PRIMARY KEY(FirstName, LastName));");
-   
+    
+   executeStatement(buf, "SELECT * FROM list;");
+
    executeStatement(buf, "DROP TABLE list;");
 
 

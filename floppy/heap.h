@@ -88,3 +88,8 @@ int pHSetBitmapFalse(char *bitmap, int recordId);
 
 int pHIncrementNumRecords(Buffer *buf, DiskAddress diskPage);
 int pHDecrementNumRecords(Buffer *buf, DiskAddress diskPage);
+
+// Record level
+int getField(char *fieldName, char *record, char *rd, int rdSize, char *out);
+int setField(char *fieldName, char *record, char *rd, int rdSize, char *value);
+int getRecordHeader(char *record, char *rd, char *value);

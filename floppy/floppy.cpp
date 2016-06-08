@@ -34,7 +34,7 @@ void createTable(Buffer *buf, FLOPPYCreateTableStatement *statement) {
    char *tName = new char[statement->tableName.length() +1];
    strcpy(tName, statement->tableName.c_str());
    td.tableName = tName;
-      
+
    Attribute *current;
    std::vector<FLOPPYCreateColumn *> columns = *(statement->columns);
    td.attributeList = NULL;
@@ -47,9 +47,17 @@ void createTable(Buffer *buf, FLOPPYCreateTableStatement *statement) {
       current->next = td.attributeList;
       td.attributeList = current;
    }
-   
 
-   //td.pKey = statement->pk;
+   std::vector<char *> primKeys = *(statement->pk->attributes);
+   td.pKey = statement->pk;
+
+   for(int i = primKeys.size() - 1; i >= 0; i--){
+      current = new Attribute();
+      current->attName = primKeys[i];
+      //attribute type probably not needed
+      current->next = td.pKey;
+      td.pKey = current;
+   }
 
 
    //Per the email from alex, I am leaving foreign keys out of tables

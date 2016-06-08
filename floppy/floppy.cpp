@@ -119,9 +119,7 @@ void insert(Buffer *buf, FLOPPYInsertStatement *statement) {
 
 void createTable(Buffer *buf, FLOPPYCreateTableStatement *statement) {
    tableDescription td;
-   char *tName = new char[statement->tableName.length() +1];
-   strcpy(tName, statement->tableName.c_str());
-   td.tableName = tName;
+   strcpy(td.tableName, statement->tableName.c_str());
 
    Attribute *current;
    std::vector<FLOPPYCreateColumn *> columns = *(statement->columns);

@@ -816,3 +816,117 @@ int findAttribute(char *fieldName, char *rd, int rdSize, int *attSize) {
 
    return ERROR;
 }
+
+void printRecordLabel(char *recordDesc, int size) {
+   int i = 0;
+   int bytesRead = 0;
+   uint8_t type;
+   uint8_t varcharLen;
+   char *recordHead = recordDesc;
+   char attribute[MAX_TABLENAME_SIZE];
+
+   while (i < size) {
+      // Read attribute
+      strcpy(attribute, recordHead);
+      bytesRead = strlen(attribute);
+      recordHead += bytesRead + 1;
+      i += bytesRead + 1;
+      printf("%s", attribute);
+
+      memcpy(&type, recordHead, sizeof(uint8_t));
+      recordHead++;
+      i++;
+
+      switch (type) {
+         case TYPE_INT:
+            printf(" (4) | ");
+            break;
+         case TYPE_DATETIME:
+            printf(" (4) | ");
+            break;
+         case TYPE_BOOLEAN:
+            printf(" (4) | ");
+            break;
+         case TYPE_VARCHAR:
+            memcpy(&varcharLen, recordHead, sizeof(uint8_t));
+            printf(" (%d) | ", varcharLen);
+            recordHead++;
+            i++;
+            break;
+         case TYPE_FLOAT:
+            printf(" (8) | ");
+            break;
+         case TYPE_PADDING:
+            printf("PADDING");
+            memcpy(&varcharLen, recordHead, sizeof(uint8_t));
+            recordHead++;
+            i++;
+            printf(" (%d) | ", varcharLen);
+            break;
+         default:
+            printf("Unknown type\n");
+      }
+   }
+
+   printf("\nDone\n");
+}
+
+void printRecord(char *recordDesc, int size, char *record) {
+   int i = 0;
+   int bytesRead = 0;
+   uint8_t type;
+   uint8_t varcharLen;
+   char out[5000];
+   char *recordHead = recordDesc;
+   char attribute[MAX_TABLENAME_SIZE];
+
+   while (i < size) {
+      // Read attribute
+      memset(out, 0, 5000);
+      strcpy(attribute, recordHead);
+      bytesRead = strlen(attribute);
+      recordHead += bytesRead + 1;
+      i += bytesRead + 1;
+      printf("%s", attribute);
+
+      memcpy(&type, recordHead, sizeof(uint8_t));
+      recordHead++;
+      i++;
+
+      switch (type) {
+         case TYPE_INT:
+            getField(attribute, record, recordDesc, 4, out);
+            printf("%s | ", out);
+            break;
+         case TYPE_DATETIME:
+            getField(attribute, record, recordDesc, 4, out);
+            printf("%s | ", out);
+            break;
+         case TYPE_BOOLEAN:
+            getField(attribute, record, recordDesc, 4, out);
+            printf("%s | ", out);
+            break;
+         case TYPE_VARCHAR:
+            memcpy(&varcharLen, recordHead, sizeof(uint8_t));
+            getField(attribute, record, recordDesc, varcharLen, out);
+            printf("%s | ", out);
+            recordHead++;
+            i++;
+            break;
+         case TYPE_FLOAT:
+            getField(attribute, record, recordDesc, 8, out);
+            printf("%s | ", out);
+            break;
+         case TYPE_PADDING:
+            printf("PADDING");
+            memcpy(&varcharLen, recordHead, sizeof(uint8_t));
+            recordHead++;
+            i++;
+            break;
+         default:
+            printf("Unknown type\n");
+      }
+   }
+
+   printf("\nDone\n");
+}

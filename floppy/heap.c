@@ -941,8 +941,9 @@ void printTable(fileDescriptor fileId, Buffer *buf, char *recordDesc) {
    getHeapFileHeader(fileId, buf, &header);
    page.FD = fileId;
    page.pageId = header.nextPage;
-
-   
+   // Print Table Header
+   printRecordLabel(recordDesc, header.recordSize);
+   // Print records
    while (page.pageId) {
       num = pHGetMaxRecords(buf, page);
       pHGetBitmap(buf, page, bitmap);

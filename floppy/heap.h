@@ -93,3 +93,6 @@ int pHDecrementNumRecords(Buffer *buf, DiskAddress diskPage);
 int getField(char *fieldName, char *record, char *rd, int rdSize, char *out);
 int setField(char *fieldName, char *record, char *rd, int rdSize, char *value);
 int getRecordHeader(char *record, char *rd, char *value);
+
+
+int findAttribute(char *fieldName, char *rd, int rdSize, int *attSize);

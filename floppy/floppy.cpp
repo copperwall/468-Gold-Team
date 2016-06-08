@@ -62,6 +62,7 @@ void insert(Buffer *buf, FLOPPYInsertStatement *statement) {
    // Get the table description
    int target_fd = getFileDescriptorForTable(buf, statement->name);
    tableDescription td;
+   printf("Getting table desc buf\n");
    getTableDescription(buf, target_fd, &td);
 
    printf("INSERT INTO %d\n", target_fd);
@@ -81,13 +82,15 @@ void insert(Buffer *buf, FLOPPYInsertStatement *statement) {
    // Iterate over the attributes of the FLOPPYInsertStatement and 
    //   call setField, passing the buffer
    // call insertRecord
-   std::vector<FLOPPYValue*> values = *(statement->values);
-
-   for(int i = 0; i < values.size(); i++) {
-      FLOPPYValue* val = values[i];
+   std::vector<FLOPPYValue*> values = *statement->values;
+   int index = 0;
+   Attribute* list = td.attributeList;
+   while (list != NULL) {
+      FLOPPYValue* val = values[index++];
       switch (val->type()) {
          case ValueType::StringValue:
-            setField(val->tableAttribute->attribute, record, rd,
+            printf("String\n");
+            setField(list->attName, record, rd,
              rd_size, val->sVal);
             break;
          case ValueType::IntValue:
@@ -110,11 +113,19 @@ void insert(Buffer *buf, FLOPPYInsertStatement *statement) {
             break;
          case ValueType::NullValue:
             break;
+         default:
+            printf("Default case\n");
       }
+
+      list = list->next;
    }
+
+   printf("Iterating over the values\n");
+   printf("Finished iterating\n");
 
    //insertRecord(buf, char *tableName, char *record, DiskAddress *location);
    // TODO: fix this function, the final param is not used.
+   printf("insertin gthe record\n");
    insertRecord(buf, statement->name, record, NULL);
 
 }

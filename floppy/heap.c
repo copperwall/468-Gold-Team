@@ -828,6 +828,7 @@ int getField(char *fieldName, char *record, char *rd, int rdSize, char *out) {
 }
 
 int setField(char *fieldName, char *record, char *rd, int rdSize, char *value) {
+   printf("Setting %s\n", fieldName);
    int attSize;
    int offset = findAttribute(fieldName, rd, rdSize, &attSize);
 

@@ -91,7 +91,7 @@ int createHeapFile(Buffer *buf, char *tableName, tableDescription *createTable) 
    char headerPage[BLOCKSIZE];
    int recordSize, fd;
 
-   fileHeader.next_page = fileHeader.freelist = 1;
+   fileHeader.next_page = fileHeader.freelist = 0;
    strncpy(fileHeader.table_name, tableName, MAX_TABLENAME_SIZE);
 
    fileHeader.record_desc_size = generateRecordDescription(*createTable, recordDescription, &recordSize);

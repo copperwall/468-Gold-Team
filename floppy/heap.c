@@ -912,7 +912,7 @@ void printRecord(char *recordDesc, int size, char *record) {
       bytesRead = strlen(attribute);
       recordHead += bytesRead + 1;
       i += bytesRead + 1;
-      printf("%s", attribute);
+      //printf("%s", attribute);
 
       memcpy(&type, recordHead, sizeof(uint8_t));
       recordHead++;
@@ -966,7 +966,7 @@ void printTable(fileDescriptor fileId, Buffer *buf, char *recordDesc) {
    page.FD = fileId;
    page.pageId = header.next_page;
    // Print Table Header
-   printRecordLabel(recordDesc, header.record_size);
+   printRecordLabel(recordDesc, header.record_desc_size);
    // Print records
    while (page.pageId) {
       num = pHGetMaxRecords(buf, page);
@@ -974,7 +974,7 @@ void printTable(fileDescriptor fileId, Buffer *buf, char *recordDesc) {
       for (ndx = 0; ndx < num; ndx++) {
          if (isRecordAvailable(bitmap, ndx)) {
             getRecord(buf, page, ndx, record);
-            printRecord(recordDesc, header.record_size, record);
+            printRecord(recordDesc, header.record_desc_size, record);
          }
       }
       page.pageId = pHGetNextPage(buf, page);

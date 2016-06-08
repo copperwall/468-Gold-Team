@@ -312,6 +312,8 @@ int insertRecord(Buffer *buf, char * tableName, char * record, DiskAddress * loc
    int nextRecordId = pHGetNextRecordSpace(bitmap);
 
    putRecord(buf, nextFree, nextRecordId, record);
+   pHSetBitmapTrue(bitmap, nextRecordId);
+   pHSetBitmap(buf, nextFree, bitmap);
    // Update the freelist if that was the last free space.
    // Record the diskaddress in the location out param.
    return SUCCESS;
@@ -328,7 +330,8 @@ int deleteRecord(Buffer *buf, DiskAddress diskPage, int recordId) {
 
    int deletedRecordId = pHGetNextRecordSpace(bitmap);
 
-   pHSetRecordSpaceAvailable(bitmap, deletedRecordId);
+   pHSetBitmapFalse(bitmap, deletedRecordId);
+   pHSetBitmap(buf, diskPage, bitmap);
    return SUCCESS;
 }
 
@@ -670,7 +673,7 @@ int pHGetNextRecordSpace(char *bitmap) {
    return ERROR;
 }
 
-int pHSetRecordSpaceOccupied(char *bitmap, int recordId) {
+int pHSetBitmapTrue(char *bitmap, int recordId) {
    int byteNum;
 
    byteNum = recordId / 8;
@@ -680,7 +683,7 @@ int pHSetRecordSpaceOccupied(char *bitmap, int recordId) {
    return SUCCESS;
 }
 
-int pHSetRecordSpaceAvailable(char *bitmap, int recordId) {
+int pHSetBitmapFalse(char *bitmap, int recordId) {
    int byteNum;
 
    byteNum = recordId / 8;

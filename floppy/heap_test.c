@@ -4,6 +4,7 @@
 #include "floppy.h"
 #include "bufman.h"
 #include "heap.h"
+#include "tables.h"
 
 // This should be a test to make a simple table with one column.
 //

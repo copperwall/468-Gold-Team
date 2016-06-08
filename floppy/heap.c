@@ -930,3 +930,29 @@ void printRecord(char *recordDesc, int size, char *record) {
 
    printf("\nDone\n");
 }
+
+void printTable(fileDescriptor fileId, Buffer *buf, char *recordDesc) {
+   int num, ndx;
+   char record[BLOCKSIZE];
+   char bitmap[BITMAP_SIZE];
+   DiskAddress page;
+   HeapFileHeader header;
+
+   getHeapFileHeader(fileId, buf, &header);
+   page.FD = fileId;
+   page.pageId = header.nextPage;
+
+   
+   while (page.pageId) {
+      num = pHGetMaxRecords(buf, page);
+      pHGetBitmap(buf, page, bitmap);
+      for (ndx = 0; ndx < num; ndx++) {
+         if () {
+            getRecord(buf, page, ndx, record);
+            printRecord(recordDesc, header.recordSize);
+         }
+      }
+      page.pageId = pHGetNextPage(buf, page);
+   }
+
+}

@@ -29,13 +29,12 @@ floppy_data_type convertColumnType(ColumnType t) {
    }
 }
 
-
 void createTable(Buffer *buf, FLOPPYCreateTableStatement *statement) {
    tableDescription td;
    char *tName = new char[statement->tableName.length() +1];
    strcpy(tName, statement->tableName.c_str());
    td.tableName = tName;
-      
+
    Attribute *current;
    std::vector<FLOPPYCreateColumn *> columns = *(statement->columns);
    td.attributeList = NULL;
@@ -48,11 +47,20 @@ void createTable(Buffer *buf, FLOPPYCreateTableStatement *statement) {
       current->next = td.attributeList;
       td.attributeList = current;
    }
-   
-   //TODO: Implement primary and foreign keys
 
-   //td.pKey = statement->pk;
+   std::vector<char *> primKeys = *(statement->pk->attributes);
+   td.pKey = statement->pk;
 
+   for(int i = primKeys.size() - 1; i >= 0; i--){
+      current = new Attribute();
+      current->attName = primKeys[i];
+      //attribute type probably not needed
+      current->next = td.pKey;
+      td.pKey = current;
+   }
+
+
+   //Per the email from alex, I am leaving foreign keys out of tables
    /*
    foreignKeys *currentfk;
    std::vector<FLOPPYForeignKey *> fks  = *(statement->fk);
@@ -67,13 +75,10 @@ void createTable(Buffer *buf, FLOPPYCreateTableStatement *statement) {
    */
    
    createHeapFile(buf, td.tableName, td);
-
-
-
 }
 
 void dropTable(Buffer *buf, FLOPPYDropTableStatement *statement) {
-   std::cout << "Drop table not implemented" << std::endl;
+   deleteHeapFile(buf, statement->table);
 }
 
 /*
@@ -130,7 +135,10 @@ int main(int argc, char *argv[]) {
 
    commence("floppyTest.dsk", buf, MAX_BUFFER_SIZE, MAX_BUFFER_SIZE);
 
-   executeStatement(buf, "DROP TABLE test;");
+   executeStatement(buf, "CREATE TABLE list (LastName VARCHAR(16), FirstName VARCHAR(16), grade INT, classroom INT, PRIMARY KEY(FirstName, LastName));");
+   
+   executeStatement(buf, "DROP TABLE list;");
+
 
    tfs_unmount();
 }

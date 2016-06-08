@@ -88,3 +88,5 @@ int pHSetBitmapFalse(char *bitmap, int recordId);
 
 int pHIncrementNumRecords(Buffer *buf, DiskAddress diskPage);
 int pHDecrementNumRecords(Buffer *buf, DiskAddress diskPage);
+
+void printRecordDesc(char *recordDesc, int size);

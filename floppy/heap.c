@@ -410,6 +410,16 @@ int heapHeaderSetTableName(fileDescriptor fileId, Buffer *buf, char *name) {
    }
 }
 
+int heapHeaderGetRecordSize(fileDescriptor fileId, Buffer *buf) {
+   char page[BLOCKSIZE];
+   HeapFileHeader *header;
+
+   getHeapHeader(fileId, buf, page);
+   header = (HeapFileHeader *)page;
+
+   return header->record_size;
+}
+
 /**
  * Grab the header, get the record desc size
  *
@@ -425,8 +435,9 @@ int heapHeaderGetRecordDesc(fileDescriptor fileId, Buffer *buf, char *bytes) {
    recordDescSize = header->record_desc_size;
 
    memcpy(bytes, page + sizeof(HeapFileHeader), recordDescSize);
-   //Get the record descriptor structure
-   return SUCCESS;
+
+   // Return the number of bytes read.
+   return recordDescSize;
 }
 
 int heapHeaderGetNextPage(fileDescriptor fileId, DiskAddress *diskPage, Buffer *buf) {

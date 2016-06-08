@@ -22,8 +22,8 @@ harness: bufman.c bufman.h libTinyFS.h tinyFS.h libDisk.o libTinyFS.o bufferTest
 heaptest:
 	$(CC) $(CFLAGS) -o heaptest -DDEBUG bufman.c libDisk.o libTinyFS.o readwrite.c heap.c heap_test.c tables.c
 floppyobjects:
-	$(CC) $(CFLAGS) -g -O -c bufman.c libDisk.o libTinyFS.o readwrite.c heap.c heap_test.c
+	$(CC) $(CFLAGS) -g -O -c bufman.c libDisk.o libTinyFS.o readwrite.c heap.c heap_test.c tables.c
 floppymain:
-	$(GCC) $(CPPFLAGS) -o floppy floppy.cpp libDisk.o libTinyFS.o readwrite.o heap.o bufman.o $(FLOPPYSRC) $(PARSERSRC) parser/FLOPPYParser.cpp parser/FLOPPYOutput.cpp
+	$(GCC) $(CPPFLAGS) -o floppy floppy.cpp libDisk.o libTinyFS.o readwrite.o heap.o bufman.o tables.o $(FLOPPYSRC) $(PARSERSRC) parser/FLOPPYParser.cpp parser/FLOPPYOutput.cpp
 clean:
 	rm -f bufman harness

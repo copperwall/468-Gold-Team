@@ -911,7 +911,7 @@ void printRecord(char *recordDesc, int size, char *record) {
       bytesRead = strlen(attribute);
       recordHead += bytesRead + 1;
       i += bytesRead + 1;
-      printf("%s", attribute);
+      //printf("%s", attribute);
 
       memcpy(&type, recordHead, sizeof(uint8_t));
       recordHead++;

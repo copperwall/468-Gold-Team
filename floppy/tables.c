@@ -47,7 +47,8 @@ int createPersistentTable(Buffer *buf, tableDescription table) {
    }
 
    // Create heapfile for new table
-   chkerr(createHeapFile(buf, table.tableName, table));
+   chkerr(createHeapFile(buf, table.tableName, &table));
+   newTable->fd = table.fd;
 
    return SUCCESS;
 }
@@ -82,7 +83,7 @@ int createVolatileTable(Buffer *buf, tableDescription table) {
 
    prev->next = newTable;
 
-   chkerr(createHeapFile(buf, table.tableName, table));
+   chkerr(createHeapFile(buf, table.tableName, &table));
    return SUCCESS;
 }
 

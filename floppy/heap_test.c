@@ -35,7 +35,7 @@ void testSingleAttribute() {
 
    Buffer *buf = calloc(1, sizeof(Buffer));
    commence("yo.dsk", buf, MAX_BUFFER_SIZE, MAX_BUFFER_SIZE);
-   createHeapFile(buf, test.tableName, test);
+   createHeapFile(buf, test.tableName, &test);
 
    char tableName[MAX_TABLENAME_SIZE];
    // At this point, the header should be in the buffer
@@ -72,7 +72,8 @@ void testFullTable() {
    Buffer *buf = calloc(1, sizeof(Buffer));
    commence("yo.dsk", buf, MAX_BUFFER_SIZE, MAX_BUFFER_SIZE);
    createPersistentTable(buf, test);
-   /* createHeapFile(buf, test.tableName, test); */
+
+   getFileDescriptorForTable(buf, "list");
 
    char tableName[MAX_TABLENAME_SIZE];
    // At this point, the header should be in the buffer
@@ -112,7 +113,7 @@ void testDoubleAttribute() {
 
    Buffer *buf = calloc(1, sizeof(Buffer));
    commence("yo.dsk", buf, MAX_BUFFER_SIZE, MAX_BUFFER_SIZE);
-   createHeapFile(buf, test.tableName, test);
+   createHeapFile(buf, test.tableName, &test);
 
    tfs_unmount();
 }
@@ -142,13 +143,14 @@ void testStringAttribute() {
 
    Buffer *buf = calloc(1, sizeof(Buffer));
    commence("yo.dsk", buf, MAX_BUFFER_SIZE, MAX_BUFFER_SIZE);
-   createHeapFile(buf, test.tableName, test);
+   createHeapFile(buf, test.tableName, &test);
 
    tfs_unmount();
 }
 
 int main() {
-   testSingleAttribute();
-   testDoubleAttribute();
-   testStringAttribute();
+   /* testSingleAttribute(); */
+   /* testDoubleAttribute(); */
+   /* testStringAttribute(); */
+   testFullTable();
 }

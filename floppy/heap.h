@@ -43,7 +43,7 @@ typedef struct page_header {
 } PageHeader;
 
 // File Creation
-int createHeapFile(Buffer *buf, char *tableName, tableDescription createTable);
+int createHeapFile(Buffer *buf, char *tableName, tableDescription *createTable);
 int deleteHeapFile(Buffer *buf, char *tableName);
 
 //File Header

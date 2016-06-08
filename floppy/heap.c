@@ -72,7 +72,7 @@ void printRecordDesc(char *recordDesc, int size) {
  * Create a new tinyFS file based on the name of the table given.
  * If the volatileFlag is set, create the table in volatile storage.
  */
-int createHeapFile(Buffer *buf, char *tableName, tableDescription createTable) {
+int createHeapFile(Buffer *buf, char *tableName, tableDescription *createTable) {
    // If the table is non-volatile, create a new tinyFS file and read the
    // header page into the buffer.
    //
@@ -94,7 +94,7 @@ int createHeapFile(Buffer *buf, char *tableName, tableDescription createTable) {
    fileHeader.next_page = fileHeader.freelist = 1;
    strncpy(fileHeader.table_name, tableName, MAX_TABLENAME_SIZE);
 
-   fileHeader.record_desc_size = generateRecordDescription(createTable, recordDescription, &recordSize);
+   fileHeader.record_desc_size = generateRecordDescription(*createTable, recordDescription, &recordSize);
    fileHeader.record_size = recordSize;
 
 #ifdef DEBUG
@@ -112,11 +112,13 @@ int createHeapFile(Buffer *buf, char *tableName, tableDescription createTable) {
    memcpy(headerPage + sizeof(HeapFileHeader), recordDescription, fileHeader.record_desc_size);
 
    // Open new file with the table name
-   printf("Opening file with name %s\n", createTable.tableName);
-   diskPage.FD = tfs_openFile(createTable.tableName);
+   printf("Opening file with name %s\n", createTable->tableName);
+   diskPage.FD = tfs_openFile(createTable->tableName);
    diskPage.pageId = 0;
 
-   if (!createTable.isVolatile) {
+   createTable->fd = diskPage.FD;
+
+   if (!createTable->isVolatile) {
       // Then put the page into the buffer with the new fd and pageid 0 and
       // flush the page.
       putPage(buf, diskPage, headerPage, BLOCKSIZE);

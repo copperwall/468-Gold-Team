@@ -706,3 +706,113 @@ int pHDecrementNumRecords(Buffer *buf, DiskAddress diskPage) {
    pHSetNumRecords(buf, diskPage, numRecords - 1);
    return SUCCESS;
 }
+
+// Search the record description for the fieldName, counting the number of
+// bytes as each attribute is iterated over.
+//
+// Once the fieldName is found, return the offset of the record. Write out the
+// number of bytes the attribute takes up to out after offset number of bytes
+// in the record
+int getField(char *fieldName, char *record, char *rd, int rdSize, char *out) {
+   int attSize;
+   int offset = findAttribute(fieldName, rd, rdSize, &attSize);
+
+   memcpy(out, record + offset, attSize);
+   return ERROR;
+}
+
+int setField(char *fieldName, char *record, char *rd, int rdSize, char *value) {
+   int attSize;
+   int offset = findAttribute(fieldName, rd, rdSize, &attSize);
+
+   memcpy(record + offset, value, attSize);
+   return ERROR;
+}
+
+// Unimplemented because we don't use those.
+int getRecordHeader(char *record, char *rd, char *value) {
+   return ERROR;
+}
+
+/**
+ * Read attribute name
+ * Compare to fieldName
+ *    if it matches?
+ *       Pause the offset
+ *       set the attSize based on the type of the current attribute
+ *       return the offset
+ * move forward
+ * read the type
+ * Add the size of the type to the offset
+ * move forward
+ *
+ * Read type
+ */
+int findAttribute(char *fieldName, char *rd, int rdSize, int *attSize) {
+   int i, bytesRead, offset;
+   uint8_t type, varLen, found;
+   char *recordHead = rd;
+   char attribute[MAX_TABLENAME_SIZE];
+
+   i = bytesRead = offset = found = 0;
+
+   while (i < rdSize) {
+      // Read in attribute name from rd
+      strcpy(attribute, recordHead);
+      bytesRead = strlen(attribute);
+      recordHead += bytesRead + 1;
+      i += bytesRead + 1;
+
+      if (!strcmp(attribute, fieldName)) {
+         // Freeze the offset and set attSize
+         found = 1;
+      }
+
+      // Read in type from rd.
+      // Add the size of the type to the offset.
+      //
+      // If the type is varchar add the varcharlen from the switch.
+      //    Should the extra byte be added? Probably
+      memcpy(&type, recordHead, sizeof(uint8_t));
+      recordHead++;
+      i++;
+
+      switch (type) {
+         case TYPE_INT:
+         case TYPE_DATETIME:
+         case TYPE_BOOLEAN:
+            if (found) {
+               *attSize = 4;
+            } else {
+               offset += 4;
+            }
+         case TYPE_VARCHAR:
+         case TYPE_PADDING:
+            memcpy(&varLen, recordHead, sizeof(uint8_t));
+
+            if (found) {
+               *attSize = varLen;
+            } else {
+               offset += varLen;
+            }
+            recordHead++;
+            i++;
+            break;
+         case TYPE_FLOAT:
+            if (found) {
+               *attSize = 8;
+            } else {
+               offset += 8;
+            }
+            break;
+         default:
+            printf("Unknown type\n");
+      }
+
+      if (found) {
+         return offset;
+      }
+   }
+
+   return ERROR;
+}

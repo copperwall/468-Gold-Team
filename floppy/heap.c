@@ -965,7 +965,7 @@ void printTable(fileDescriptor fileId, Buffer *buf, char *recordDesc) {
    page.FD = fileId;
    page.pageId = header.next_page;
    // Print Table Header
-   printRecordLabel(recordDesc, header.record_size);
+   printRecordLabel(recordDesc, header.record_desc_size);
    // Print records
    while (page.pageId) {
       num = pHGetMaxRecords(buf, page);

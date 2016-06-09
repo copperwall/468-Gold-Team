@@ -383,6 +383,9 @@ int insertRecord(Buffer *buf, char * tableName, char * record, DiskAddress * loc
       empty.pageId = 0;
       heapHeaderSetFreeSpace(fd, empty, buf);
    }
+
+   location->FD = fd;
+   location->pageId = nextFree.pageId;
    // Update the freelist if that was the last free space.
    // Record the diskaddress in the location out param.
    return SUCCESS;
@@ -592,6 +595,7 @@ int putRecord(Buffer *buf, DiskAddress diskPage, int recordId, char *bytes) {
    offset = sizeof(PageHeader) + (recordSize * recordId);
 
    memcpy(page + offset, bytes, recordSize);
+   putPage(buf, diskPage, page, BLOCKSIZE);
 }
 
 int pHGetRecSize(Buffer *buf, DiskAddress diskPage) {
@@ -671,6 +675,7 @@ int pHSetBitmap(Buffer *buf, DiskAddress diskPage, char *bitmap) {
    char page[BLOCKSIZE];
    PageHeader *header;
 
+   readPage(buf, diskPage);
    getPage(buf, diskPage, page);
    header = (PageHeader *)page;
 
@@ -875,6 +880,7 @@ int findAttribute(char *fieldName, char *rd, int rdSize, int *attSize) {
             } else {
                offset += 4;
             }
+            break;
          case TYPE_VARCHAR:
          case TYPE_PADDING:
             memcpy(&varLen, recordHead, sizeof(uint8_t));

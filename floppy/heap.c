@@ -522,22 +522,31 @@ int heapHeaderGetNextPage(fileDescriptor fileId, DiskAddress *diskPage, Buffer *
    header = (HeapFileHeader *)page;
    // Return the address of the next page in the PageList list
    diskPage->FD = fileId;
-   memcpy(&(diskPage->pageId), &(header->next_page), sizeof(int));
+   printf("GETTING THE NEXT PAGE OF THE FILE HEADER %d\n", header->next_page);
+   diskPage->pageId = header->next_page;
+   printf("GETTING THE NEXT PAGE OF THE DISK PAGE%d\n", diskPage->pageId);
+   /* memcpy(&(diskPage->pageId), &(header->next_page), sizeof(int)); */
    return SUCCESS;
 }
 
 int heapHeaderSetNextPage(fileDescriptor fileId, DiskAddress diskPage, Buffer *buf) {
    char page[BLOCKSIZE];
    HeapFileHeader *header;
+   DiskAddress headerPage;
+
+   headerPage.FD = fileId;
+   headerPage.pageId = 0;
+
    // Get the contents of the heap file header page
    getHeapHeader(fileId, buf, page);
    header = (HeapFileHeader *)page;
 
-   memcpy(&(header->next_page), &(diskPage.pageId), sizeof(int));
-   putPage(buf, diskPage, page, BLOCKSIZE);
+   /* memcpy(&(header->next_page), &(diskPage.pageId), sizeof(int)); */
+   printf("Setting header next page to %d\n", diskPage.pageId);
+   header->next_page = diskPage.pageId;
+   putPage(buf, headerPage, page, BLOCKSIZE);
    return SUCCESS;
 }
-
 
 int heapHeaderGetFreeSpace(fileDescriptor fileId, DiskAddress *diskPage, Buffer *buf) {
    char page[BLOCKSIZE];
@@ -665,6 +674,7 @@ int pHGetBitmap(Buffer *buf, DiskAddress diskPage, char *out) {
    char page[BLOCKSIZE];
    PageHeader *header;
 
+   readPage(buf, diskPage);
    getPage(buf, diskPage, page);
    header = (PageHeader *)page;
 
@@ -697,6 +707,7 @@ int pHGetCreateTimestamp(Buffer *buf, DiskAddress diskPage) {
    char page[BLOCKSIZE];
    PageHeader *header;
 
+   readPage(buf, diskPage);
    getPage(buf, diskPage, page);
    header = (PageHeader *)page;
 
@@ -1058,24 +1069,33 @@ void printTable(fileDescriptor fileId, Buffer *buf, char *recordDesc) {
    int num, ndx;
    char record[BLOCKSIZE];
    char bitmap[BITMAP_SIZE];
+   char headerPage[BLOCKSIZE];
    DiskAddress page;
-   HeapFileHeader header;
+   HeapFileHeader *header;
 
-   getHeapHeader(fileId, buf, &header);
+   getHeapHeader(fileId, buf, &headerPage);
+   header = (HeapFileHeader *)headerPage;
    page.FD = fileId;
-   page.pageId = header.next_page;
+   page.pageId = header->next_page;
    // Print Table Header
-   printRecordLabel(recordDesc, header.record_desc_size);
+   printRecordLabel(recordDesc, header->record_desc_size);
    // Print records
    while (page.pageId) {
+      printf("It's probably here %d\n", page.pageId);
       num = pHGetMaxRecords(buf, page);
+      printf("Max records %d\n", num);
       pHGetBitmap(buf, page, bitmap);
       for (ndx = 0; ndx < num; ndx++) {
          if (isRecordAvailable(bitmap, ndx)) {
+            printf("Recordid %d available\n", ndx);
             getRecord(buf, page, ndx, record);
-            printRecord(recordDesc, header.record_desc_size, record);
+            printRecord(recordDesc, header->record_desc_size, record);
          }
       }
+
+      page.pageId = 1;
+      printf("Checking pageid 1's next page %d\n", pHGetNextPage(buf, page));
+      // This is probably failing
       page.pageId = pHGetNextPage(buf, page);
    }
 

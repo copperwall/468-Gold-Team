@@ -123,10 +123,10 @@ void insert(Buffer *buf, FLOPPYInsertStatement *statement) {
    printf("Iterating over the values\n");
    printf("Finished iterating\n");
 
+   DiskAddress recordLocation;
    //insertRecord(buf, char *tableName, char *record, DiskAddress *location);
-   // TODO: fix this function, the final param is not used.
    printf("insertin gthe record\n");
-   insertRecord(buf, statement->name, record, NULL);
+   insertRecord(buf, statement->name, record, &recordLocation);
 }
 
 void createTable(Buffer *buf, FLOPPYCreateTableStatement *statement) {

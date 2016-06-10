@@ -59,7 +59,8 @@ void printRecordDesc(char *recordDesc, int size) {
       }
    }
 
-   printf("Done\n");
+   /* printf("Done\n"); */
+   printf("\n");
 }
 // Heap File Stuff goes here
 
@@ -327,12 +328,15 @@ int insertRecord(Buffer *buf, char * tableName, char * record, DiskAddress * loc
    // of the last page where next_page is 0.
    //
    // S
+   printf("We're in insert record. nexFree.pageid: %d\n", nextFree.pageId);
    if (nextFree.pageId == 0) {
+      printf("AHHH NO PAGES\n");
       char nextDataPage[BLOCKSIZE];
       char iterPage[BLOCKSIZE];
       PageHeader *pageHeader;
 
       newPage(buf, fd, &nextDiskPage);
+      pageHeader = (PageHeader *)nextDataPage;
 
       initDataPageHeader(buf, nextDiskPage, nextDataPage);
       putPage(buf, nextDiskPage, nextDataPage, BLOCKSIZE);
@@ -341,6 +345,7 @@ int insertRecord(Buffer *buf, char * tableName, char * record, DiskAddress * loc
       // Otherwise read that pageid in and then start iterating until you get
       // to 0.
       if (nextPage.pageId == 0) {
+         printf("Creating first page fam\n");
          heapHeaderSetNextPage(fd, nextDiskPage, buf);
       } else {
          // Now we have to traverse disk pages until we find the one with a
@@ -372,6 +377,8 @@ int insertRecord(Buffer *buf, char * tableName, char * record, DiskAddress * loc
 
    int nextRecordId = pHGetNextRecordSpace(bitmap);
 
+   printf("Num records in %d: %d\n", nextFree.pageId, pHGetNumRecords(buf, nextFree));
+   printf("Putting record at %d in pageid %d\n", nextRecordId, nextFree.pageId);
    putRecord(buf, nextFree, nextRecordId, record);
    pHSetBitmapTrue(bitmap, nextRecordId);
    pHSetBitmap(buf, nextFree, bitmap);
@@ -524,9 +531,9 @@ int heapHeaderGetNextPage(fileDescriptor fileId, DiskAddress *diskPage, Buffer *
    header = (HeapFileHeader *)page;
    // Return the address of the next page in the PageList list
    diskPage->FD = fileId;
-   //printf("GETTING THE NEXT PAGE OF THE FILE HEADER %d\n", header->next_page);
+   /* printf("GETTING THE NEXT PAGE OF THE FILE HEADER %d\n", header->next_page); */
    diskPage->pageId = header->next_page;
-   //printf("GETTING THE NEXT PAGE OF THE DISK PAGE%d\n", diskPage->pageId);
+   /* printf("GETTING THE NEXT PAGE OF THE DISK PAGE%d\n", diskPage->pageId); */
    /* memcpy(&(diskPage->pageId), &(header->next_page), sizeof(int)); */
    return SUCCESS;
 }
@@ -544,7 +551,7 @@ int heapHeaderSetNextPage(fileDescriptor fileId, DiskAddress diskPage, Buffer *b
    header = (HeapFileHeader *)page;
 
    /* memcpy(&(header->next_page), &(diskPage.pageId), sizeof(int)); */
-   //printf("Setting header next page to %d\n", diskPage.pageId);
+   /* printf("Setting header next page to %d\n", diskPage.pageId); */
    header->next_page = diskPage.pageId;
    putPage(buf, headerPage, page, BLOCKSIZE);
    return SUCCESS;
@@ -558,6 +565,7 @@ int heapHeaderGetFreeSpace(fileDescriptor fileId, DiskAddress *diskPage, Buffer 
    header = (HeapFileHeader *)page;
    // Return the address of the next page in the PageList list
    diskPage->FD = fileId;
+   /* printf("FREE LIST VALUE %d\n", header->freelist); */
    memcpy(&(diskPage->pageId), &(header->freelist), sizeof(int));
    return SUCCESS;
 }
@@ -637,6 +645,7 @@ int pHGetMaxRecords(Buffer *buf, DiskAddress diskPage) {
    char page[BLOCKSIZE];
    PageHeader *header;
 
+   readPage(buf, diskPage);
    getPage(buf, diskPage, page);
    header = (PageHeader *)page;
 
@@ -704,6 +713,7 @@ int pHGetNextPage(Buffer *buf, DiskAddress diskPage) {
    char page[BLOCKSIZE];
    PageHeader *header;
 
+   readPage(buf, diskPage);
    getPage(buf, diskPage, page);
    header = (PageHeader *)page;
 
@@ -791,7 +801,7 @@ int pHSetNextFree(Buffer *buf, DiskAddress diskPage, int nextFree) {
 int pHGetNextRecordSpace(char *bitmap) {
    int i;
 
-   for (i = 0; i < BITMAP_SIZE; i++) {
+   for (i = 0; i < BITMAP_SIZE * sizeof(uint8_t); i++) {
       if (!(*bitmap >> (i % 8)) & 0x01) {
          return i;
       }
@@ -941,14 +951,17 @@ int getField(char *fieldName, char *record, char *rd, int rdSize, char *out) {
    int attSize;
    int offset = findAttribute(fieldName, rd, rdSize, &attSize);
 
+   // TODO: findAttribute is not setting attSize
+   /* printf("DEBUG: Getting field %s at offset %d. AttSize %d\n", fieldName, offset, attSize); */
    memcpy(out, record + offset, attSize);
    return ERROR;
 }
 
 int setField(char *fieldName, char *record, char *rd, int rdSize, char *value) {
-   //printf("Setting %s\n", fieldName);
+   /* printf("Setting %s\n", fieldName); */
    int attSize;
    int offset = findAttribute(fieldName, rd, rdSize, &attSize);
+   /* printf("Putting field %s at offset %d\n", fieldName, offset); */
 
    memcpy(record + offset, value, attSize);
    return ERROR;
@@ -1011,7 +1024,8 @@ void printRecordLabel(char *recordDesc, int size) {
       }
    }
 
-   printf("\nDone\n");
+   /* printf("\nDone\n"); */
+   printf("\n");
 }
 
 void printRecord(char *recordDesc, int size, char *record) {
@@ -1089,13 +1103,11 @@ void printTable(fileDescriptor fileId, Buffer *buf, char *recordDesc) {
    printRecordLabel(recordDesc, header->record_desc_size);
    // Print records
    while (page.pageId) {
-      //printf("It's probably here %d\n", page.pageId);
       num = pHGetMaxRecords(buf, page);
-      //printf("Max records %d\n", num);
       pHGetBitmap(buf, page, bitmap);
       for (ndx = 0; ndx < num; ndx++) {
          if (isRecordAvailable(bitmap, ndx)) {
-            //printf("Recordid %d available\n", ndx);
+            /* printf("Recordid %d available\n", ndx); */
             getRecord(buf, page, ndx, record);
             printRecord(recordDesc, header->record_desc_size, record);
          }

@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 #include "parser/FLOPPYParser.h"
 
@@ -337,6 +338,8 @@ int main(int argc, char *argv[]) {
    executeStatement(buf, "SELECT * FROM scott;");
 
    //executeStatement(buf, "DROP TABLE scott;");
+
+   assert(getFileDescriptorForTable(buf, (char *)"scott") == -1);
 
    std::cout << "done" << std::endl;
 

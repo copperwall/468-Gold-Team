@@ -118,7 +118,7 @@ int createHeapFile(Buffer *buf, char *tableName, tableDescription *createTable) 
    memcpy(headerPage + sizeof(HeapFileHeader), recordDescription, fileHeader.record_desc_size);
 
    // Open new file with the table name
-   printf("Opening file with name %s\n", createTable->tableName);
+   //printf("Opening file with name %s\n", createTable->tableName);
    diskPage.FD = tfs_openFile(createTable->tableName);
    diskPage.pageId = 0;
 
@@ -128,13 +128,13 @@ int createHeapFile(Buffer *buf, char *tableName, tableDescription *createTable) 
    if (!createTable->isVolatile) {
       // Then put the page into the buffer with the new fd and pageid 0 and
       // flush the page.
-      printf("puting page\n");
+      //printf("puting page\n");
       putPage(buf, diskPage, headerPage, BLOCKSIZE);
    } else {
       putVolatilePage(buf, diskPage, headerPage, BLOCKSIZE);
    }
 
-   printf("flush page\n");
+   //printf("flush page\n");
    flushPage(buf, diskPage);
 
 
@@ -524,9 +524,9 @@ int heapHeaderGetNextPage(fileDescriptor fileId, DiskAddress *diskPage, Buffer *
    header = (HeapFileHeader *)page;
    // Return the address of the next page in the PageList list
    diskPage->FD = fileId;
-   printf("GETTING THE NEXT PAGE OF THE FILE HEADER %d\n", header->next_page);
+   //printf("GETTING THE NEXT PAGE OF THE FILE HEADER %d\n", header->next_page);
    diskPage->pageId = header->next_page;
-   printf("GETTING THE NEXT PAGE OF THE DISK PAGE%d\n", diskPage->pageId);
+   //printf("GETTING THE NEXT PAGE OF THE DISK PAGE%d\n", diskPage->pageId);
    /* memcpy(&(diskPage->pageId), &(header->next_page), sizeof(int)); */
    return SUCCESS;
 }
@@ -544,7 +544,7 @@ int heapHeaderSetNextPage(fileDescriptor fileId, DiskAddress diskPage, Buffer *b
    header = (HeapFileHeader *)page;
 
    /* memcpy(&(header->next_page), &(diskPage.pageId), sizeof(int)); */
-   printf("Setting header next page to %d\n", diskPage.pageId);
+   //printf("Setting header next page to %d\n", diskPage.pageId);
    header->next_page = diskPage.pageId;
    putPage(buf, headerPage, page, BLOCKSIZE);
    return SUCCESS;
@@ -946,7 +946,7 @@ int getField(char *fieldName, char *record, char *rd, int rdSize, char *out) {
 }
 
 int setField(char *fieldName, char *record, char *rd, int rdSize, char *value) {
-   printf("Setting %s\n", fieldName);
+   //printf("Setting %s\n", fieldName);
    int attSize;
    int offset = findAttribute(fieldName, rd, rdSize, &attSize);
 
@@ -1089,20 +1089,20 @@ void printTable(fileDescriptor fileId, Buffer *buf, char *recordDesc) {
    printRecordLabel(recordDesc, header->record_desc_size);
    // Print records
    while (page.pageId) {
-      printf("It's probably here %d\n", page.pageId);
+      //printf("It's probably here %d\n", page.pageId);
       num = pHGetMaxRecords(buf, page);
-      printf("Max records %d\n", num);
+      //printf("Max records %d\n", num);
       pHGetBitmap(buf, page, bitmap);
       for (ndx = 0; ndx < num; ndx++) {
          if (isRecordAvailable(bitmap, ndx)) {
-            printf("Recordid %d available\n", ndx);
+            //printf("Recordid %d available\n", ndx);
             getRecord(buf, page, ndx, record);
             printRecord(recordDesc, header->record_desc_size, record);
          }
       }
 
       page.pageId = 1;
-      printf("Checking pageid 1's next page %d\n", pHGetNextPage(buf, page));
+      //printf("Checking pageid 1's next page %d\n", pHGetNextPage(buf, page));
       // This is probably failing
       page.pageId = pHGetNextPage(buf, page);
    }

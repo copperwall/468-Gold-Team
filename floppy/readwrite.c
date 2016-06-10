@@ -60,23 +60,23 @@ int putPage(Buffer *buf, DiskAddress page, char *data, int dataSize) {
    }
 
    if ((index = getCacheIndex(buf, page)) == ERROR) {
-      printf("getCacheIndex error\n");
+      //printf("getCacheIndex error\n");
       if ((index = getBufferIndex(buf, page)) == ERROR) {
-         printf("getBufferIndex error\n");
+         //printf("getBufferIndex error\n");
          // load page into buffer and then put page there
          readPage(buf, page);
          index = getBufferIndex(buf, page);
          if (index < 0) {
-            printf("getBufferIndex RETURNED %d\n", index);
+            //printf("getBufferIndex RETURNED %d\n", index);
          }
       }
 
-      printf("Going to memcpy to index %d\n", index);
+      //printf("Going to memcpy to index %d\n", index);
       memcpy(buf->pages[index].block, data, BLOCKSIZE);
-      printf("writing page\n");
+      //printf("writing page\n");
       writePage(buf, page);
    } else {
-      printf("Putting block in buffer\n");
+      //printf("Putting block in buffer\n");
       memcpy(buf->cache[index].block, data, BLOCKSIZE);
    }
 

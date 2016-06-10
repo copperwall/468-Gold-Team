@@ -47,11 +47,11 @@ int squash(Buffer * buf) {
 //read access to the disk page
 int readPage(Buffer *buf, DiskAddress diskPage) {
    if (pageExistsInBuffer(buf, diskPage) == SUCCESS) {
-      printf("touching block\n");
+//      printf("touching block\n");
       touchBlock(buf, diskPage);
    }
    else {
-      printf("page doesn't exist in buffer\n");
+      //printf("page doesn't exist in buffer\n");
       chkerr(loadPage(buf, diskPage));
    }
    return SUCCESS;
@@ -171,13 +171,13 @@ int loadPage(Buffer *buf, DiskAddress diskPage) {
    int victimPage;
 
    chkerr(victimPage = getLRUPage(buf));
-   printf("lrupage is %d\n", victimPage);
+   //printf("lrupage is %d\n", victimPage);
    if (buf->dirty[victimPage]) {
-      printf("buf is dirty\n");
+      //printf("buf is dirty\n");
       chkerr(flushPage(buf, buf->pages[victimPage].diskPage));
    }
 
-   printf("reading page\n");
+   //printf("reading page\n");
    tfs_readPage(diskPage.FD, diskPage.pageId,
       buf->pages[victimPage].block);
    buf->pages[victimPage].isAvailable = 0;
@@ -216,21 +216,21 @@ int pageExistsInCache(Buffer *buf, DiskAddress diskPage) {
 int getBufferIndex(Buffer *buf, DiskAddress diskPage) {
    int ndx;
 
-   printf("nBufferBlocks is %d\n", buf->nBufferBlocks);
+   //printf("nBufferBlocks is %d\n", buf->nBufferBlocks);
    for (ndx = 0; ndx < buf->nBufferBlocks; ndx++) {
       if (buf->pages[ndx].isAvailable) {
          //printf("page is available\n");
          if (buf->pages[ndx].diskPage.FD == diskPage.FD
           && buf->pages[ndx].diskPage.pageId == diskPage.pageId) {
-            printf("GETBUFFERINDEX returning buffer index %d\n", ndx);
+            //printf("GETBUFFERINDEX returning buffer index %d\n", ndx);
             return ndx;
          }
       } else {
-         printf("page is not available\n");
+         //printf("page is not available\n");
       }
    }
 
-   printf("getBufferIndex ERROR\n");
+   //printf("getBufferIndex ERROR\n");
    return ERROR;
 }
 

@@ -28,15 +28,45 @@ int selectScan(int fd, int *outTable) {
    return 1;
 }*/
 
+// Recursively check to see if conditions have been satisfied.
+bool testCondition(FLOPPYNode *condition, char *record, char *rd) {
+
+}
+
 void selectRowsIntoTable(Buffer *buf, fileDescriptor sourceFd,
  fileDescriptor targetFd, char *recordDesc, FLOPPYSelectStatement *stmt) {
-   // TODO: Figure out how to do this.
+   int num, ndx;
+   char record[BLOCKSIZE];
+   char bitmap[BITMAP_SIZE];
+   char headerPage[BLOCKSIZE];
+   DiskAddress page;
+   HeapFileHeader *header;
+   std::vector<FLOPPYTableSpec *> tables = *(stmt->tableSpecs);
+   FLOPPYTableSpec *targetTable = tables[0];
+
+   getHeapHeader(sourceFd, buf, &headerPage);
+   header = (HeapFileHeader*)headerPage;
+   page.FD = sourceFd;
+   page.pageId = header->next_page;
 
    // Iterate over every row in the source table.
-      // Iterate over every selection criteria in the statemenet.
-         // Get the field from the record
-         // Test the field against the selection criteria
-            // IF it matches, insert into new table, if not ignore.
+   while (page.pageId) {
+      num = pHGetMaxRecords(buf, page);
+      pHGetBitmap(buf, page, bitmap);
+      for (ndx = 0; ndx < num; ndx++) {
+         if (isRecordAvailable(bitmap, ndx)) {
+            // get the record
+            getRecord(buf, page, ndx, record);
+            // Test the record against the selection criteria
+            if(testCondition(stmt->whereCondition, record, recordDesc)) {
+               // IF it matches, insert into new table, if not ignore.
+               DiskAddress recordLocation;
+               insertRecord(buf, targetTable->tableName, record, &recordLocation);
+            }
+         }
+      }
+      page.pageId = pHGetNextPage(buf, page);
+   }
 }
 
 void newSelect(Buffer *buf, FLOPPYSelectStatement *statement) {

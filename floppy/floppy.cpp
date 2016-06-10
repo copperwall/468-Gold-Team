@@ -30,7 +30,7 @@ int selectScan(int fd, int *outTable) {
 
 // Recursively check to see if conditions have been satisfied.
 bool testCondition(FLOPPYNode *condition, char *record, char *rd) {
-
+   return 1;
 }
 
 void selectRowsIntoTable(Buffer *buf, fileDescriptor sourceFd,
@@ -60,6 +60,7 @@ void selectRowsIntoTable(Buffer *buf, fileDescriptor sourceFd,
             // Test the record against the selection criteria
             if(testCondition(stmt->whereCondition, record, recordDesc)) {
                // IF it matches, insert into new table, if not ignore.
+               printf("SELECT:: MATCH, INSERTING!\n");
                DiskAddress recordLocation;
                insertRecord(buf, targetTable->tableName, record, &recordLocation);
             }
@@ -69,7 +70,7 @@ void selectRowsIntoTable(Buffer *buf, fileDescriptor sourceFd,
    }
 }
 
-void newSelect(Buffer *buf, FLOPPYSelectStatement *statement) {
+void new_selectStatement(Buffer *buf, FLOPPYSelectStatement *statement) {
    // Get the tables being queried against
    std::vector<FLOPPYTableSpec *> tables = *(statement->tableSpecs);
    char *recordDesc = (char *)malloc(2048);
@@ -85,12 +86,14 @@ void newSelect(Buffer *buf, FLOPPYSelectStatement *statement) {
    tableDescription original;
    tableDescription tempDesc;
    // name it temp1, TODO make this unique.
-   strcpy(tempDesc.tableName, "temp1");
-   tempDesc.fd = 0;
    getTableDescription(buf, origFD, &original);
    memcpy(&tempDesc, &original, sizeof(tableDescription));
+   strcpy(tempDesc.tableName, "temp1");
+   tempDesc.fd = 0;
+   tempDesc.next = NULL;
 
    // Create the new table
+   printf("Temp table is named %s\n", tempDesc.tableName);
    if(createPersistentTable(buf, tempDesc) == E_TABLE_EXISTS) {
       std::cout << "Table already exists" << std::endl;
    }
@@ -256,6 +259,7 @@ void createTable(Buffer *buf, FLOPPYCreateTableStatement *statement) {
    printf("TABLE JUST ADDED: %s\n", td.tableName);
 
    td.isVolatile = 0;
+   td.next = NULL;
    if(createPersistentTable(buf, td) == E_TABLE_EXISTS) {
       std::cout << "Table already exists" << std::endl;
    }
@@ -303,7 +307,7 @@ void executeStatement(Buffer *buf, char *statement) {
             break;
          case(StatementType::SelectStatement) :
             std::cout << "Found Select Statement" << std::endl;
-            selectStatement(buf, (FLOPPYSelectStatement *)output->statement);
+            new_selectStatement(buf, (FLOPPYSelectStatement *)output->statement);
             break;
          default :
             std::cout << "Unknown statement type" << std::endl;

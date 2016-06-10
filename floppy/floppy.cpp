@@ -330,9 +330,13 @@ int main(int argc, char *argv[]) {
    executeStatement(buf, "CREATE TABLE list (LastName VARCHAR(16), FirstName VARCHAR(16), grade INT, classroom INT, PRIMARY KEY(FirstName, LastName));");
     */
    executeStatement(buf, "CREATE TABLE scott(foo VARCHAR(20), bar VARCHAR(50), PRIMARY KEY(foo));");
+   executeStatement(buf, "CREATE TABLE scott1(foo VARCHAR(20), bar VARCHAR(50), PRIMARY KEY(foo));");
+
+   /*
    executeStatement(buf, "INSERT INTO scott VALUES('abcd', 'efgh');");
    executeStatement(buf, "INSERT INTO scott VALUES('YASS', 'queen');");
    executeStatement(buf, "SELECT * FROM scott;");
+   */
 
    executeStatement(buf, "DROP TABLE scott;");
 

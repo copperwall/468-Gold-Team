@@ -28,6 +28,57 @@ int selectScan(int fd, int *outTable) {
    return 1;
 }*/
 
+void selectRowsIntoTable(Buffer *buf, fileDescriptor sourceFd,
+ fileDescriptor targetFd, char *recordDesc, FLOPPYSelectStatement *stmt) {
+   // TODO: Figure out how to do this.
+
+   // Iterate over every row in the source table.
+      // Iterate over every selection criteria in the statemenet.
+         // Get the field from the record
+         // Test the field against the selection criteria
+            // IF it matches, insert into new table, if not ignore.
+}
+
+void newSelect(Buffer *buf, FLOPPYSelectStatement *statement) {
+   // Get the tables being queried against
+   std::vector<FLOPPYTableSpec *> tables = *(statement->tableSpecs);
+   char *recordDesc = (char *)malloc(2048);
+   // Get the file descriptor for the table.
+   // We only support quering against a single table.
+   int origFD = getFileDescriptorForTable(buf, tables[0]->tableName);
+   // Get the record description.
+   int rd_size = heapHeaderGetRecordDesc(origFD, buf, recordDesc);
+
+   // To do a selection, we need to create a temporary table.
+   // The temporary table will have the same structure as the existing table.
+   // So let's just clone it.
+   tableDescription original;
+   tableDescription tempDesc;
+   // name it temp1, TODO make this unique.
+   strcpy(tempDesc.tableName, "temp1");
+   tempDesc.fd = 0;
+   getTableDescription(buf, origFD, &original);
+   memcpy(&tempDesc, &original, sizeof(tableDescription));
+
+   // Create the new table
+   if(createPersistentTable(buf, tempDesc) == E_TABLE_EXISTS) {
+      std::cout << "Table already exists" << std::endl;
+   }
+
+   // Now that we have a new table created, we can copy stuff into it
+   int newFD = getFileDescriptorForTable(buf, tempDesc.tableName);
+
+   // Insert the qualifying rows into the new table.
+   selectRowsIntoTable(buf, origFD, newFD, recordDesc, statement);
+
+   // Print the new table.
+   printTable(newFD, buf, recordDesc);
+
+   // Drop the temp table
+   deleteHeapFile(buf, tempDesc.tableName);
+   // TODO: We also need to remove the table from the linked list, I think?
+}
+
 void selectStatement(Buffer *buf, FLOPPYSelectStatement *statement) {
    std::vector<FLOPPYTableSpec *> tables = *(statement->tableSpecs);
    printf("TABLE TO SELECT: %s\n", tables[0]->tableName);
@@ -100,7 +151,7 @@ void insert(Buffer *buf, FLOPPYInsertStatement *statement) {
             */
             break;
          case ValueType::FloatValue:
-            /*
+           /*
             setField(val->tableAttribute->attribute, record, rd,
              rd_size, val->fVal);
             */
@@ -246,7 +297,8 @@ int main(int argc, char *argv[]) {
     */
    executeStatement(buf, "CREATE TABLE scott(foo VARCHAR(20), bar VARCHAR(50), PRIMARY KEY(foo));");
    executeStatement(buf, "INSERT INTO scott VALUES('abcd', 'efgh');");
-   //executeStatement(buf, "SELECT * FROM scott;");
+   executeStatement(buf, "INSERT INTO scott VALUES('YASS', 'queen');");
+   executeStatement(buf, "SELECT * FROM scott;");
 
    executeStatement(buf, "DROP TABLE scott;");
 

@@ -49,6 +49,7 @@ int createPersistentTable(Buffer *buf, tableDescription table) {
    // Create heapfile for new table
    chkerr(createHeapFile(buf, table.tableName, &table));
    newTable->fd = table.fd;
+   newTable->next = NULL;
 
    return SUCCESS;
 }

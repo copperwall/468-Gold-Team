@@ -563,11 +563,14 @@ int heapHeaderGetFreeSpace(fileDescriptor fileId, DiskAddress *diskPage, Buffer 
 int heapHeaderSetFreeSpace(fileDescriptor fileId, DiskAddress diskPage, Buffer *buf) {
    char page[BLOCKSIZE];
    HeapFileHeader *header;
+
    // Get the contents of the heap file header page
    getHeapHeader(fileId, buf, page);
    header = (HeapFileHeader *)page;
 
    memcpy(&(header->freelist), &(diskPage.pageId), sizeof(int));
+
+   diskPage.pageId = 0;
    putPage(buf, diskPage, page, BLOCKSIZE);
    return SUCCESS;
 }
@@ -642,6 +645,7 @@ int pHSetMaxRecords(Buffer *buf, DiskAddress diskPage, int maxRecords) {
    char page[BLOCKSIZE];
    PageHeader *header;
 
+   readPage(buf, diskPage);
    getPage(buf, diskPage, page);
    header = (PageHeader *)page;
 
@@ -653,6 +657,7 @@ int pHGetNumRecords(Buffer *buf, DiskAddress diskPage) {
    char page[BLOCKSIZE];
    PageHeader *header;
 
+   readPage(buf, diskPage);
    getPage(buf, diskPage, page);
    header = (PageHeader *)page;
 
@@ -718,6 +723,7 @@ int pHSetCreateTimestamp(Buffer *buf, DiskAddress diskPage, int timestamp) {
    char page[BLOCKSIZE];
    PageHeader *header;
 
+   readPage(buf, diskPage);
    getPage(buf, diskPage, page);
    header = (PageHeader *)page;
 

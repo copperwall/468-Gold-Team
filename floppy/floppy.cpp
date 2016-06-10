@@ -29,6 +29,90 @@ int selectScan(int fd, int *outTable) {
    return 1;
 }*/
 
+// Recursively check to see if conditions have been satisfied.
+bool testCondition(FLOPPYNode *condition, char *record, char *rd) {
+   return 1;
+}
+
+void selectRowsIntoTable(Buffer *buf, fileDescriptor sourceFd,
+ fileDescriptor targetFd, char *recordDesc, FLOPPYSelectStatement *stmt) {
+   int num, ndx;
+   char record[BLOCKSIZE];
+   char bitmap[BITMAP_SIZE];
+   char headerPage[BLOCKSIZE];
+   DiskAddress page;
+   HeapFileHeader *header;
+   std::vector<FLOPPYTableSpec *> tables = *(stmt->tableSpecs);
+   FLOPPYTableSpec *targetTable = tables[0];
+
+   getHeapHeader(sourceFd, buf, &headerPage);
+   header = (HeapFileHeader*)headerPage;
+   page.FD = sourceFd;
+   page.pageId = header->next_page;
+
+   // Iterate over every row in the source table.
+   while (page.pageId) {
+      num = pHGetMaxRecords(buf, page);
+      pHGetBitmap(buf, page, bitmap);
+      for (ndx = 0; ndx < num; ndx++) {
+         if (isRecordAvailable(bitmap, ndx)) {
+            // get the record
+            getRecord(buf, page, ndx, record);
+            // Test the record against the selection criteria
+            if(testCondition(stmt->whereCondition, record, recordDesc)) {
+               // IF it matches, insert into new table, if not ignore.
+               printf("SELECT:: MATCH, INSERTING!\n");
+               DiskAddress recordLocation;
+               insertRecord(buf, targetTable->tableName, record, &recordLocation);
+            }
+         }
+      }
+      page.pageId = pHGetNextPage(buf, page);
+   }
+}
+
+void new_selectStatement(Buffer *buf, FLOPPYSelectStatement *statement) {
+   // Get the tables being queried against
+   std::vector<FLOPPYTableSpec *> tables = *(statement->tableSpecs);
+   char *recordDesc = (char *)malloc(2048);
+   // Get the file descriptor for the table.
+   // We only support quering against a single table.
+   int origFD = getFileDescriptorForTable(buf, tables[0]->tableName);
+   // Get the record description.
+   int rd_size = heapHeaderGetRecordDesc(origFD, buf, recordDesc);
+
+   // To do a selection, we need to create a temporary table.
+   // The temporary table will have the same structure as the existing table.
+   // So let's just clone it.
+   tableDescription original;
+   tableDescription tempDesc;
+   // name it temp1, TODO make this unique.
+   getTableDescription(buf, origFD, &original);
+   memcpy(&tempDesc, &original, sizeof(tableDescription));
+   strcpy(tempDesc.tableName, "temp1");
+   tempDesc.fd = 0;
+   tempDesc.next = NULL;
+
+   // Create the new table
+   printf("Temp table is named %s\n", tempDesc.tableName);
+   if(createPersistentTable(buf, tempDesc) == E_TABLE_EXISTS) {
+      std::cout << "Table already exists" << std::endl;
+   }
+
+   // Now that we have a new table created, we can copy stuff into it
+   int newFD = getFileDescriptorForTable(buf, tempDesc.tableName);
+
+   // Insert the qualifying rows into the new table.
+   selectRowsIntoTable(buf, origFD, newFD, recordDesc, statement);
+
+   // Print the new table.
+   printTable(newFD, buf, recordDesc);
+
+   // Drop the temp table
+   deleteHeapFile(buf, tempDesc.tableName);
+   // TODO: We also need to remove the table from the linked list, I think?
+}
+
 void selectStatement(Buffer *buf, FLOPPYSelectStatement *statement) {
    std::vector<FLOPPYTableSpec *> tables = *(statement->tableSpecs);
    printf("TABLE TO SELECT: %s\n", tables[0]->tableName);
@@ -101,7 +185,7 @@ void insert(Buffer *buf, FLOPPYInsertStatement *statement) {
             */
             break;
          case ValueType::FloatValue:
-            /*
+           /*
             setField(val->tableAttribute->attribute, record, rd,
              rd_size, val->fVal);
             */
@@ -176,6 +260,7 @@ void createTable(Buffer *buf, FLOPPYCreateTableStatement *statement) {
    printf("TABLE JUST ADDED: %s\n", td.tableName);
 
    td.isVolatile = 0;
+   td.next = NULL;
    if(createPersistentTable(buf, td) == E_TABLE_EXISTS) {
       std::cout << "Table already exists" << std::endl;
    }
@@ -223,7 +308,7 @@ void executeStatement(Buffer *buf, char *statement) {
             break;
          case(StatementType::SelectStatement) :
             std::cout << "Found Select Statement" << std::endl;
-            selectStatement(buf, (FLOPPYSelectStatement *)output->statement);
+            new_selectStatement(buf, (FLOPPYSelectStatement *)output->statement);
             break;
          default :
             std::cout << "Unknown statement type" << std::endl;
@@ -246,8 +331,13 @@ int main(int argc, char *argv[]) {
    executeStatement(buf, "CREATE TABLE list (LastName VARCHAR(16), FirstName VARCHAR(16), grade INT, classroom INT, PRIMARY KEY(FirstName, LastName));");
     */
    executeStatement(buf, "CREATE TABLE scott(foo VARCHAR(20), bar VARCHAR(50), PRIMARY KEY(foo));");
+   executeStatement(buf, "CREATE TABLE scott1(foo VARCHAR(20), bar VARCHAR(50), PRIMARY KEY(foo));");
+
+   /*
    executeStatement(buf, "INSERT INTO scott VALUES('abcd', 'efgh');");
+   executeStatement(buf, "INSERT INTO scott VALUES('YASS', 'queen');");
    executeStatement(buf, "SELECT * FROM scott;");
+   */
 
    executeStatement(buf, "DROP TABLE scott;");
 

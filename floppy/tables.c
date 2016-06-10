@@ -41,6 +41,9 @@ int createPersistentTable(Buffer *buf, tableDescription table) {
    if (buf->tables == NULL) {
       buf->tables = newTable;
       printf("Set buf->tables\n");
+   } else if (prev == NULL) {
+      perror("PREV IS NULL\n");
+      exit(-1);
    } else {
       printf("appended to %s\n", prev->tableName);
       prev->next = newTable;

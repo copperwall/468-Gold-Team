@@ -129,11 +129,13 @@ int createHeapFile(Buffer *buf, char *tableName, tableDescription *createTable) 
    if (!createTable->isVolatile) {
       // Then put the page into the buffer with the new fd and pageid 0 and
       // flush the page.
+      printf("puting page\n");
       putPage(buf, diskPage, headerPage, BLOCKSIZE);
    } else {
       putVolatilePage(buf, diskPage, headerPage, BLOCKSIZE);
    }
 
+   printf("flush page\n");
    flushPage(buf, diskPage);
 
 
